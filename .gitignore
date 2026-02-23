@@ -1,35 +1,28 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Dependencies
+node_modules/
+.next/
 
-# Virtual environment
-venv/
-env/
+# Environment
 .env
+.env.local
 
-# Uploads and data (keep folder structure)
-backend/uploads/*
-!backend/uploads/.gitkeep
-backend/chroma_db/*
-backend/chroma_data/*
-
-# IDE
-.vscode/
-.idea/
-
-# Logs
-*.log
+# Prisma
+prisma/migrations/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Node modules (frontend)
-frontend/node_modules/
-frontend/dist/
-frontend/.env.local
+# IDE
+.vscode/
+.idea/
 
-# Test
-.pytest_cache/
-.coverage
+# Debug
+npm-debug.log*
+tsconfig.tsbuildinfo
+
+# Vercel
+.vercel
+
+# Phase 2 data (keep template files)
+phase_2_files/test_data/

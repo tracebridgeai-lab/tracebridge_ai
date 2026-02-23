@@ -1,3 +1,0 @@
-"""
-TraceBridge AI - App Package
-"""
