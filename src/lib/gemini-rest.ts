@@ -116,22 +116,27 @@ EXPECTED DOCUMENT: ${expectedDocument}
 
 DOCUMENT SYNONYM GUIDE:
 Companies often use different names for the same regulatory document. Match on CONTENT, not just filename.
-- "Software Development Plan" = SDP, Dev Plan, Development Plan, SDLC Plan
-- "Software Requirements Specification" = SRS, Requirements Doc, System Requirements
-- "Software Architecture Document" = SAD, Architecture Doc, Design Specification, Software Design
-- "Software Detailed Design" = SDD, Detailed Design, Module Design
+- "Software Development Plan" = SDP, Dev Plan, Development Plan, SDLC Plan, SRS (when it contains planning sections)
+- "Software Requirements Specification" = SRS, Requirements Doc, System Requirements, Software Requirements
+- "Software Architecture Document" = SAD, Architecture Doc, Design Specification, Software Design, Comprehensive Software Design Document, CSDD, Design Document
+- "Software Detailed Design" = SDD, Detailed Design, Module Design, CSDD (when it covers module-level design)
 - "Software Verification Plan" = SVP, Test Plan, Verification Plan, V&V Plan
-- "Software Verification Report" = Test Report, Verification Report, V&V Report
-- "Risk Management File" = RMF, Risk File, Risk Analysis, Risk Assessment, FMEA
+- "Software Verification Report" = Test Report, Verification Report, V&V Report, Test Protocol, Acceptance Criteria
+- "Risk Management File" = RMF, Risk File, Risk Analysis, Risk Assessment, FMEA, Hazard Analysis
 - "Risk Management Plan" = RMP, Risk Plan
-- "Software of Unknown Provenance" = SOUP List, SOUP Analysis, Third-Party Components, OTS List
+- "Software of Unknown Provenance" = SOUP List, SOUP Analysis, Third-Party Components, OTS List, COTS
 - "Clinical Evaluation Report" = CER, Clinical Evaluation
 - "Quality Manual" = QMS Manual, Quality Management System Manual
 - "Design History File" = DHF, Design File
+- "Design Input" = Design Input Document, PRD, Product Requirements, Design Specification, CSDD (when it contains design inputs/outputs)
+- "Design Output" = Design Output Document, Design Specification, CSDD (when it contains design outputs)
 - "Post-Market Surveillance Plan" = PMS Plan, Post-Market Plan
 - "Software Maintenance Plan" = Maintenance Plan, Support Plan
 - "Labeling" = IFU, Instructions for Use, User Manual, Label
 - "Technical Documentation" = Technical File, Tech Doc
+- "Test Protocol" = Verification Protocol, V&V Protocol, Test Procedure, Test Script, Acceptance Test
+
+IMPORTANT: A single document may satisfy MULTIPLE requirements. An SRS can contain planning sections. A CSDD can be an architecture document AND a design input artifact. A Test Protocol can be both a verification plan AND a verification report.
 
 INSTRUCTIONS:
 1. Search through ALL uploaded documents thoroughly — look at headings, section titles, content, and conclusions.
@@ -213,7 +218,7 @@ RESPOND IN EXACTLY THIS JSON FORMAT (no markdown, no code blocks):
                     maxOutputTokens: 2048,
                 }
             }),
-            timeout: 30000 // 60 second timeout
+            timeout: 120000 // 120 second timeout for large documents (144+ pages)
         });
 
         console.log(`[DEBUG] Response status: ${response.status}`);

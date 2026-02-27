@@ -150,7 +150,15 @@ export default function UploadPage() {
                     files: uploadedFiles,
                 }),
             });
-            const uploadJson = await uploadRes.json();
+
+            // Safe JSON parsing: handle non-JSON error responses (e.g., Vercel 413)
+            let uploadJson;
+            try {
+                uploadJson = await uploadRes.json();
+            } catch {
+                const text = await uploadRes.text().catch(() => "Unknown server error");
+                throw new Error(`Server error (${uploadRes.status}): ${text.substring(0, 200)}`);
+            }
 
             if (!uploadJson.success) throw new Error(uploadJson.error);
 
@@ -171,7 +179,16 @@ export default function UploadPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ uploadId: newUploadId }),
             });
-            const analyzeJson = await analyzeRes.json();
+
+            // Safe JSON parsing for analyze response
+            let analyzeJson;
+            try {
+                analyzeJson = await analyzeRes.json();
+            } catch {
+                clearInterval(progressInterval);
+                const text = await analyzeRes.text().catch(() => "Unknown server error");
+                throw new Error(`Analysis server error (${analyzeRes.status}): ${text.substring(0, 200)}`);
+            }
 
             clearInterval(progressInterval);
 
