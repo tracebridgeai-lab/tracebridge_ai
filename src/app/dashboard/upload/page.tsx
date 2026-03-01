@@ -144,9 +144,8 @@ export default function UploadPage() {
             setUploadId(newUploadId);
             setActiveStep(2);
 
-            // Step 3-4: Run analysis
-            setTimeout(() => setActiveStep(3), 2000);
-
+            // Step 3: Kick off analysis — returns IMMEDIATELY (runs in background on server)
+            setTimeout(() => setActiveStep(3), 1500);
             const analyzeRes = await fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -159,18 +158,46 @@ export default function UploadPage() {
             } catch {
                 throw new Error(`Analysis error (${analyzeRes.status})`);
             }
-
             if (!analyzeJson.success) throw new Error(analyzeJson.error);
 
+            // Step 4: Poll /api/reports until analysis completes (status = complete/failed)
             setActiveStep(4);
+            const MAX_POLLS = 60;       // 3 minutes max (60 × 3s)
+            const POLL_INTERVAL = 3000; // 3 seconds
 
-            // Step 5: Done
+            await new Promise<void>((resolve, reject) => {
+                let polls = 0;
+                const poll = setInterval(async () => {
+                    polls++;
+                    try {
+                        const statusRes = await fetch(`/api/reports?uploadId=${newUploadId}`);
+                        const statusJson = await statusRes.json();
+
+                        if (statusJson.success) {
+                            const status = statusJson.data?.upload?.status;
+                            if (status === "complete") {
+                                clearInterval(poll);
+                                resolve();
+                            } else if (status === "failed") {
+                                clearInterval(poll);
+                                reject(new Error(statusJson.data?.upload?.errorMessage || "Analysis failed on server"));
+                            }
+                        }
+
+                        if (polls >= MAX_POLLS) {
+                            clearInterval(poll);
+                            reject(new Error("Analysis timed out. Please try again."));
+                        }
+                    } catch {
+                        // Network blip — keep polling
+                    }
+                }, POLL_INTERVAL);
+            });
+
+            setStep("done");
             setTimeout(() => {
-                setStep("done");
-                setTimeout(() => {
-                    router.push(`/dashboard/results?id=${newUploadId}`);
-                }, 1500);
-            }, 1000);
+                router.push(`/dashboard/results?id=${newUploadId}`);
+            }, 1500);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
             setStep("upload");
@@ -198,10 +225,10 @@ export default function UploadPage() {
                                 <div
                                     key={i}
                                     className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-500 ${isActive
-                                            ? "bg-[var(--primary)]/10 border border-[var(--primary)]/30"
-                                            : isComplete
-                                                ? "opacity-100"
-                                                : "opacity-40"
+                                        ? "bg-[var(--primary)]/10 border border-[var(--primary)]/30"
+                                        : isComplete
+                                            ? "opacity-100"
+                                            : "opacity-40"
                                         }`}
                                 >
                                     {isComplete ? (
