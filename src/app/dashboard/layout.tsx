@@ -9,6 +9,7 @@ import {
     LayoutDashboard,
     Upload,
     FileText,
+    Users,
     LogOut,
     Loader2,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/upload", label: "Upload", icon: Upload },
     { href: "/dashboard/results", label: "Reports", icon: FileText },
+    { href: "/dashboard/team", label: "Team", icon: Users },
 ];
 
 export default function DashboardLayout({

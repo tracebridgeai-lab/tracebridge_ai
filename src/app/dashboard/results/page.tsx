@@ -34,6 +34,9 @@ interface GapResult {
         quote: string;
     }>;
     geminiResponse?: string;
+    estimatedCost?: string;
+    estimatedTimeline?: string;
+    remediationSteps?: string[];
 }
 
 interface ReportData {
@@ -55,10 +58,15 @@ interface ReportData {
     };
 }
 
-// Severity-based cost/timeline estimates
-function getEstimates(severity?: string, status?: string) {
-    if (status === "compliant") return { cost: "—", timeline: "—" };
-    switch (severity) {
+// Severity-based cost/timeline estimates — uses AI values when available
+function getEstimates(result: GapResult) {
+    if (result.status === "compliant") return { cost: "—", timeline: "—" };
+    // Prefer AI-generated estimates
+    if (result.estimatedCost && result.estimatedCost !== "—") {
+        return { cost: result.estimatedCost, timeline: result.estimatedTimeline || "4–8 weeks" };
+    }
+    // Fallback to severity-based
+    switch (result.severity) {
         case "critical":
             return { cost: "$5,000 – $10,000", timeline: "8–12 weeks" };
         case "major":
@@ -75,6 +83,8 @@ function getCategory(standard: string): string {
     if (standard.includes("62304")) return "V&V Documentation";
     if (standard.includes("14971")) return "Risk Management";
     if (standard.includes("13485")) return "Quality Systems";
+    if (standard.includes("10993")) return "Biocompatibility";
+    if (standard.includes("eStar")) return "eStar Template";
     return "General";
 }
 
@@ -114,7 +124,7 @@ function ResultsContent() {
             .finally(() => setLoading(false));
     }, [uploadId]);
 
-    const exportReport = () => {
+    const exportJSON = () => {
         if (!report) return;
         const blob = new Blob([JSON.stringify(report, null, 2)], {
             type: "application/json",
@@ -122,9 +132,118 @@ function ResultsContent() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `gap-report-${report.upload.deviceName.replace(/\s+/g, "-")}.json`;
+        a.download = `tracebridge-report-${uploadId}.json`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    const exportPDF = async () => {
+        if (!report) return;
+        const { default: jsPDF } = await import("jspdf");
+        const autoTable = (await import("jspdf-autotable")).default;
+
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Header
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, pageWidth, 40, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text("TraceBridge AI", 14, 18);
+        doc.setFontSize(10);
+        doc.text("Regulatory Compliance Gap Analysis Report", 14, 26);
+        doc.setFontSize(8);
+        doc.text(`Device: ${report.upload.deviceName}  |  Generated: ${new Date().toLocaleDateString()}`, 14, 34);
+
+        // Summary
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text("Summary", 14, 52);
+        doc.setFontSize(10);
+        doc.text(`Compliance Score: ${report.summary.complianceScore}%`, 14, 60);
+        doc.text(`Total: ${report.summary.total}  |  Compliant: ${report.summary.compliant}  |  Gaps: ${report.summary.gaps}  |  Review: ${report.summary.needsReview}`, 14, 67);
+
+        // Table
+        const tableData = report.upload.gapResults.map((r: GapResult) => {
+            const priority = getPriority(r.status, r.severity);
+            const estimates = getEstimates(r);
+            return [
+                priority.label,
+                getCategory(r.standard),
+                `${r.standard} \u00a7${r.section}`,
+                r.requirement.length > 55 ? r.requirement.substring(0, 52) + "..." : r.requirement,
+                r.status === "compliant" ? "\u2713 Compliant" : r.status === "gap_detected" ? "\u2717 Gap" : "\u26a0 Review",
+                estimates.cost,
+                estimates.timeline,
+            ];
+        });
+
+        autoTable(doc, {
+            startY: 75,
+            head: [["Priority", "Category", "Standard", "Requirement", "Status", "Est. Cost", "Timeline"]],
+            body: tableData,
+            theme: "grid",
+            headStyles: { fillColor: [99, 102, 241], textColor: 255, fontSize: 7 },
+            bodyStyles: { fontSize: 6.5 },
+            columnStyles: { 0: { cellWidth: 18 }, 3: { cellWidth: 50 } },
+        });
+
+        // Gap detail pages
+        const gaps = report.upload.gapResults.filter((r: GapResult) => r.status !== "compliant");
+        for (const gap of gaps) {
+            doc.addPage();
+            const est = getEstimates(gap);
+            doc.setFontSize(14);
+            doc.setTextColor(239, 68, 68);
+            doc.text(`Gap: ${gap.standard} \u00a7${gap.section}`, 14, 20);
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text("What FDA Requires:", 14, 32);
+            doc.setFontSize(9);
+            const reqLines = doc.splitTextToSize(gap.requirement, pageWidth - 28);
+            doc.text(reqLines, 14, 39);
+            let y = 39 + reqLines.length * 5 + 8;
+            doc.setFontSize(10);
+            doc.text("Citations:", 14, y);
+            y += 7;
+            doc.setFontSize(9);
+            if (gap.citations?.length) {
+                for (const c of gap.citations) {
+                    const line = doc.splitTextToSize(`\u2022 ${c.source} \u2014 ${c.section}: \"${c.quote}\"`, pageWidth - 28);
+                    doc.text(line, 14, y);
+                    y += line.length * 5 + 2;
+                }
+            } else {
+                doc.text("No evidence found.", 14, y);
+                y += 6;
+            }
+            y += 4;
+            doc.setFontSize(10);
+            doc.text("Remediation:", 14, y);
+            y += 7;
+            doc.setFontSize(9);
+            if (gap.remediationSteps?.length) {
+                for (const step of gap.remediationSteps) {
+                    const sl = doc.splitTextToSize(`\u2022 ${step}`, pageWidth - 28);
+                    doc.text(sl, 14, y);
+                    y += sl.length * 5 + 2;
+                }
+            }
+            y += 4;
+            doc.text(`Cost: ${est.cost}  |  Timeline: ${est.timeline}`, 14, y);
+        }
+
+        // Footer
+        const pages = doc.getNumberOfPages();
+        for (let i = 1; i <= pages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(7);
+            doc.setTextColor(150);
+            doc.text(`TraceBridge AI \u2014 Confidential  |  Page ${i}/${pages}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 8, { align: "center" });
+        }
+
+        doc.save(`TraceBridge-Report-${report.upload.deviceName.replace(/\s+/g, "-")}.pdf`);
     };
 
     // Navigate between gaps in modal
@@ -197,9 +316,14 @@ function ResultsContent() {
                         })()}
                     </p>
                 </div>
-                <button onClick={exportReport} className="btn-secondary flex items-center gap-2">
-                    <Download className="w-4 h-4" /> Export
-                </button>
+                <div className="flex gap-2">
+                    <button onClick={exportPDF} className="btn-primary flex items-center gap-2 text-sm">
+                        <Download className="w-4 h-4" /> Export PDF
+                    </button>
+                    <button onClick={exportJSON} className="btn-secondary flex items-center gap-2 text-sm">
+                        <Download className="w-4 h-4" /> JSON
+                    </button>
+                </div>
             </div>
 
             {/* Summary Cards */}
@@ -330,8 +454,8 @@ function ResultsContent() {
                             {/* Status */}
                             <div>
                                 <span className={`text-xs font-medium ${result.status === "compliant" ? "text-[var(--success)]" :
-                                        result.status === "gap_detected" ? "text-[var(--danger)]" :
-                                            "text-[var(--warning)]"
+                                    result.status === "gap_detected" ? "text-[var(--danger)]" :
+                                        "text-[var(--warning)]"
                                     }`}>
                                     {result.status === "compliant" ? "Complete" :
                                         result.status === "gap_detected" ? "Missing" : "Incomplete"}
@@ -495,13 +619,13 @@ function ResultsContent() {
                                             <div className="flex justify-between">
                                                 <span className="text-sm font-medium">Estimated Timeline:</span>
                                                 <span className="text-sm text-[var(--muted)]">
-                                                    {getEstimates(selectedResult.severity, selectedResult.status).timeline}
+                                                    {getEstimates(selectedResult).timeline}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-sm font-medium">Estimated Cost:</span>
                                                 <span className="text-sm text-[var(--muted)]">
-                                                    {getEstimates(selectedResult.severity, selectedResult.status).cost}
+                                                    {getEstimates(selectedResult).cost}
                                                 </span>
                                             </div>
                                         </div>

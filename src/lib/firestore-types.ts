@@ -50,6 +50,9 @@ export interface GapResult {
     quote: string;
   }>;
   geminiResponse?: string;
+  estimatedCost?: string;
+  estimatedTimeline?: string;
+  remediationSteps?: string[];
   createdAt: Timestamp | Date;
 }
 
@@ -87,4 +90,23 @@ export interface UserProfile {
   photoURL?: string;
   createdAt: Timestamp | Date;
   lastLoginAt: Timestamp | Date;
+}
+
+/**
+ * Team / Workspace for collaboration
+ */
+export interface Team {
+  id?: string;
+  name: string;
+  ownerId: string;
+  members: TeamMember[];
+  createdAt: Timestamp | Date;
+}
+
+export interface TeamMember {
+  uid: string;
+  email: string;
+  displayName?: string;
+  role: "admin" | "member";
+  joinedAt: Timestamp | Date;
 }

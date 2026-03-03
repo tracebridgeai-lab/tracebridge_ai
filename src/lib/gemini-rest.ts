@@ -40,6 +40,9 @@ function generateMockResponse(
     confidence: "high" | "medium" | "low";
     citations: { source: string; section: string; quote: string }[];
     rawResponse: string;
+    estimatedCost: string;
+    estimatedTimeline: string;
+    remediationSteps: string[];
 } {
     const random = Math.random();
 
@@ -54,7 +57,10 @@ function generateMockResponse(
                     quote: `Evidence found for: ${requirement.substring(0, 100)}...`
                 }
             ],
-            rawResponse: `Mock: Found evidence for ${standard} ${section}`
+            rawResponse: `Mock: Found evidence for ${standard} ${section}`,
+            estimatedCost: "—",
+            estimatedTimeline: "—",
+            remediationSteps: [],
         };
     } else if (random < 0.7) {
         return {
@@ -67,14 +73,20 @@ function generateMockResponse(
                     quote: `Partial evidence for: ${requirement.substring(0, 100)}...`
                 }
             ],
-            rawResponse: `Mock: Partial evidence for ${standard} ${section}`
+            rawResponse: `Mock: Partial evidence for ${standard} ${section}`,
+            estimatedCost: "—",
+            estimatedTimeline: "—",
+            remediationSteps: [],
         };
     } else {
         return {
             found: false,
             confidence: "low",
             citations: [],
-            rawResponse: `Mock: No evidence found for ${standard} ${section}`
+            rawResponse: `Mock: No evidence found for ${standard} ${section}`,
+            estimatedCost: "$3,000 - $8,000",
+            estimatedTimeline: "4-8 weeks",
+            remediationSteps: ["Draft missing documentation", "Engage regulatory consultant", "Conduct testing if required"],
         };
     }
 }
@@ -93,6 +105,9 @@ export async function queryGeminiREST(
     confidence: "high" | "medium" | "low";
     citations: { source: string; section: string; quote: string }[];
     rawResponse: string;
+    estimatedCost: string;
+    estimatedTimeline: string;
+    remediationSteps: string[];
 }> {
     console.log(`[DEBUG] Querying Gemini REST API for ${standard} ${section}`);
     console.log(`[DEBUG] API Key present: ${!!GEMINI_API_KEY}`);
@@ -149,6 +164,14 @@ CONFIDENCE SCALE:
 - "medium": The requirement appears to be addressed but with alternate wording, in a differently-named document, or partially covered. This still counts as evidence.
 - "low": Only a tangential or passing mention — not clearly fulfilling the requirement.
 
+COST & TIMELINE ESTIMATION:
+If the requirement is NOT met (found=false or confidence=low), estimate the remediation effort:
+- estimatedCost: a cost range in USD (e.g., "$2,000 - $5,000") based on documentation/testing complexity
+- estimatedTimeline: a time range (e.g., "4-6 weeks") based on typical regulatory work
+- remediationSteps: list of 2-4 specific action items to address the gap
+
+If the requirement IS met (found=true, confidence=high/medium), set cost to "—", timeline to "—", and remediationSteps to [].
+
 RESPOND IN EXACTLY THIS JSON FORMAT (no markdown, no code blocks):
 {
   "found": true/false,
@@ -160,7 +183,10 @@ RESPOND IN EXACTLY THIS JSON FORMAT (no markdown, no code blocks):
       "quote": "relevant excerpt (max 200 chars)"
     }
   ],
-  "reasoning": "brief explanation of your assessment"
+  "reasoning": "brief explanation of your assessment",
+  "estimatedCost": "$X,XXX - $X,XXX" or "—",
+  "estimatedTimeline": "X-X weeks" or "—",
+  "remediationSteps": ["step 1", "step 2"]
 }`;
 
     // Process files and convert .docx to text
@@ -244,6 +270,9 @@ RESPOND IN EXACTLY THIS JSON FORMAT (no markdown, no code blocks):
                 confidence: parsed.confidence || "low",
                 citations: parsed.citations || [],
                 rawResponse: text,
+                estimatedCost: parsed.estimatedCost || "—",
+                estimatedTimeline: parsed.estimatedTimeline || "—",
+                remediationSteps: parsed.remediationSteps || [],
             };
         }
 
@@ -252,6 +281,9 @@ RESPOND IN EXACTLY THIS JSON FORMAT (no markdown, no code blocks):
             confidence: "low",
             citations: [],
             rawResponse: text,
+            estimatedCost: "—",
+            estimatedTimeline: "—",
+            remediationSteps: [],
         };
     } catch (error) {
         console.error("[DEBUG] Gemini REST API error:", error);

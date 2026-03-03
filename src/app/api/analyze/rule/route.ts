@@ -121,6 +121,9 @@ export async function POST(request: Request) {
             missingRequirement: rule.requirement,
             citations: geminiResult.citations,
             geminiResponse: geminiResult.rawResponse,
+            estimatedCost: geminiResult.estimatedCost,
+            estimatedTimeline: geminiResult.estimatedTimeline,
+            remediationSteps: geminiResult.remediationSteps,
             createdAt: Timestamp.now(),
         };
 
