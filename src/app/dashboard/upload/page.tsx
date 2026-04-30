@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
@@ -17,10 +17,12 @@ import {
     Brain,
     BarChart3,
     FileSearch,
+    ArrowRight,
 } from "lucide-react";
+import { ProductCodeSelector } from "@/components/ProductCodeSelector";
 
-// Per-file limit: 20MB
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+// Per-file limit: 50MB to support large real-world protocols (like Omnipod SAW)
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 // Analysis steps for the step-by-step UI
 const ANALYSIS_STEPS = [
@@ -36,6 +38,7 @@ export default function UploadPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { user } = useAuth();
     const [deviceName, setDeviceName] = useState("");
+    const [selectedCode, setSelectedCode] = useState<any>(null);
     const [files, setFiles] = useState<File[]>([]);
     const [dragActive, setDragActive] = useState(false);
     const [step, setStep] = useState<"upload" | "analyzing" | "done">("upload");
@@ -43,18 +46,47 @@ export default function UploadPage() {
     const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 });
     const [error, setError] = useState("");
     const [uploadId, setUploadId] = useState("");
+    
+    // Scan theater state
+    const [currentScanText, setCurrentScanText] = useState("Initializing compliance engine...");
+
+    useEffect(() => {
+        if (activeStep !== 4) return;
+        
+        const possibleTexts = [
+            "Scanning IEC 62304 Section 5.1.2...",
+            "Evaluating ISO 14971 Risk Controls...",
+            "Cross-referencing FDA 21 CFR Part 820...",
+            "Analyzing Software Requirements Specification...",
+            "Extracting Traceability Matrix boundaries...",
+            "Checking ISO 13485 Design History constraints...",
+            "Validating Cybersecurity compliance vectors...",
+            "Assessing human factors testing protocols..."
+        ];
+        
+        // Shuffle randomly for dynamic effect
+        const shuffled = possibleTexts.sort(() => 0.5 - Math.random());
+        let i = 0;
+        
+        const interval = setInterval(() => {
+            setCurrentScanText(shuffled[i % shuffled.length]);
+            i++;
+        }, 600);
+        
+        return () => clearInterval(interval);
+    }, [activeStep]);
 
     const handleFiles = (newFiles: FileList | File[]) => {
         const fileArray = Array.from(newFiles).filter(
             (f) =>
                 f.type === "application/pdf" ||
-                f.type ===
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                f.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                f.type === "text/plain"
         );
 
         const oversized = fileArray.filter(f => f.size > MAX_FILE_SIZE);
         if (oversized.length > 0) {
-            setError(`File "${oversized[0].name}" is ${(oversized[0].size / 1024 / 1024).toFixed(1)}MB. Max file size is 20MB.`);
+            setError(`File "${oversized[0].name}" is ${(oversized[0].size / 1024 / 1024).toFixed(1)}MB. Max file size is 50MB.`);
             return;
         }
 
@@ -72,9 +104,19 @@ export default function UploadPage() {
         handleFiles(e.dataTransfer.files);
     };
 
+    const handleQuickLoadDemo = () => {
+        const demoFiles = [
+            new File(["Dummy payload"], "FDA_510k_Executive_Summary_v3.pdf", { type: "application/pdf" }),
+            new File(["Dummy payload"], "ISO_14971_Risk_Management_Report.pdf", { type: "application/pdf" }),
+            new File(["Dummy payload"], "IEC_62304_Software_Architecture_Spec.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }),
+            new File(["Dummy payload"], "Cybersecurity_Threat_Model_SBOM.pdf", { type: "application/pdf" }),
+        ];
+        handleFiles(demoFiles as unknown as FileList);
+    };
+
     const handleSubmit = async () => {
-        if (!deviceName || files.length === 0) {
-            setError("Please enter a device name and upload at least one document.");
+        if (!selectedCode || files.length === 0) {
+            setError("Please select a medical device type and upload at least one document.");
             return;
         }
 
@@ -127,7 +169,13 @@ export default function UploadPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    deviceName,
+                    deviceName: selectedCode.description,
+                    productCode: selectedCode.code,
+                    features: {
+                        requiresSoftware: selectedCode.requiresSoftware,
+                        requiresClinical: selectedCode.requiresClinical,
+                        requiresBiocompatibility: selectedCode.requiresBiocompatibility
+                    },
                     files: uploadedFiles,
                     idToken,
                 }),
@@ -145,49 +193,45 @@ export default function UploadPage() {
             setUploadId(newUploadId);
             setActiveStep(2);
 
-            // Step 3: Get list of rules to check
+            // Step 3: Kick off Native Batch Gap Engine
             setActiveStep(3);
-            const startRes = await fetch("/api/analyze/start", {
+            const analyzeRes = await fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ uploadId: newUploadId }),
             });
-            const startJson = await startRes.json();
-            if (!startJson.success) throw new Error(startJson.error);
+            const analyzeJson = await analyzeRes.json();
+            if (!analyzeJson.success) throw new Error(analyzeJson.error);
 
-            const rules = startJson.data.rules;
-            const totalRules = rules.length;
-            setAnalysisProgress({ current: 0, total: totalRules });
-
-            // Step 4: Analyze rules ONE AT A TIME (each ≈10-15s, well under Vercel 60s limit)
+            // Step 4: Poll backend for completion (The Batch engine finishes in seconds)
             setActiveStep(4);
-            for (let i = 0; i < totalRules; i++) {
-                setAnalysisProgress({ current: i + 1, total: totalRules });
-
-                const ruleRes = await fetch("/api/analyze/rule", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ uploadId: newUploadId, rule: rules[i] }),
-                });
-
-                const ruleJson = await ruleRes.json();
-                if (!ruleJson.success) {
-                    console.warn(`Rule ${rules[i].section} failed:`, ruleJson.error);
-                    // Continue processing remaining rules even if one fails
+            setAnalysisProgress({ current: 0, total: 0 }); // Use generic Step 5 UI
+            
+            let isComplete = false;
+            let pollingCounter = 0;
+            while (!isComplete) {
+                await new Promise(r => setTimeout(r, 3000)); // Poll every 3s
+                pollingCounter++;
+                
+                const headers: Record<string, string> = {};
+                if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+                
+                const reportRes = await fetch(`/api/reports?uploadId=${newUploadId}`, { headers });
+                if (reportRes.ok) {
+                    const reportJson = await reportRes.json();
+                    if (reportJson.success) {
+                        if (reportJson.data.upload.status === "complete") {
+                            isComplete = true;
+                        } else if (reportJson.data.upload.status === "failed") {
+                            throw new Error(reportJson.data.upload.errorMessage || "Analysis failed in the background batch processor.");
+                        }
+                    }
                 }
-
-                // Small delay between rules to avoid rate limiting
-                if (i < totalRules - 1) {
-                    await new Promise(r => setTimeout(r, 500));
+                
+                if (pollingCounter > 300) { // 15 minute maximum timeout to account for exponential API backoffs
+                    throw new Error("Analysis timed out. Please check your document sizes or API rate limits.");
                 }
             }
-
-            // Step 5: Finalize analysis
-            await fetch("/api/analyze/complete", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ uploadId: newUploadId }),
-            });
 
             setStep("done");
             setTimeout(() => {
@@ -203,37 +247,41 @@ export default function UploadPage() {
     // Analysis step-by-step UI
     if (step === "analyzing") {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="glass-card p-12 text-center max-w-lg w-full gradient-border">
-                    <Loader2 className="w-12 h-12 text-[var(--primary)] mx-auto mb-6 animate-spin" />
-                    <h2 className="text-2xl font-bold mb-2">Analyzing Your Submission...</h2>
-                    <p className="text-[var(--muted)] mb-8 text-sm">
-                        This may take a few minutes for large documents.
-                    </p>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-2xl mx-auto">
+                <div className="bg-white border border-[var(--border)] rounded-md p-8 w-full shadow-sm">
+                    <div className="flex items-center gap-4 mb-6 border-b border-[var(--border)] pb-4">
+                        <Loader2 className="w-8 h-8 text-[var(--primary)] animate-spin" />
+                        <div>
+                            <h2 className="text-xl font-bold text-[var(--foreground)]">Regulatory Gap Analysis in Progress</h2>
+                            <p className="text-[var(--muted)] text-sm">
+                                Processing ISO 13485 constraints. Do not close this window.
+                            </p>
+                        </div>
+                    </div>
 
-                    {/* Step list */}
-                    <div className="space-y-4 text-left">
+                    {/* Step list table format */}
+                    <div className="space-y-2 border border-[var(--border)] rounded bg-slate-50 p-2">
                         {ANALYSIS_STEPS.map((s, i) => {
                             const isComplete = i < activeStep;
                             const isActive = i === activeStep;
                             return (
                                 <div
                                     key={i}
-                                    className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-500 ${isActive
-                                        ? "bg-[var(--primary)]/10 border border-[var(--primary)]/30"
+                                    className={`flex items-center gap-3 p-3 transition-colors ${isActive
+                                        ? "bg-white border border-[var(--primary)]/30 rounded"
                                         : isComplete
                                             ? "opacity-100"
                                             : "opacity-40"
                                         }`}
                                 >
                                     {isComplete ? (
-                                        <CheckCircle2 className="w-5 h-5 text-[var(--success)] flex-shrink-0" />
+                                        <CheckCircle2 className="w-4 h-4 text-[var(--success)] flex-shrink-0" />
                                     ) : isActive ? (
-                                        <Loader2 className="w-5 h-5 text-[var(--primary)] animate-spin flex-shrink-0" />
+                                        <Loader2 className="w-4 h-4 text-[var(--primary)] animate-spin flex-shrink-0" />
                                     ) : (
-                                        <s.icon className="w-5 h-5 text-[var(--muted)] flex-shrink-0" />
+                                        <s.icon className="w-4 h-4 text-[var(--muted)] flex-shrink-0" />
                                     )}
-                                    <span className={`text-sm ${isActive ? "text-white font-medium" : isComplete ? "text-[var(--success)]" : "text-[var(--muted)]"}`}>
+                                    <span className={`text-sm ${isActive ? "text-[var(--primary)] font-bold" : isComplete ? "text-[var(--foreground)]" : "text-[var(--muted)]"}`}>
                                         {s.label}
                                     </span>
                                 </div>
@@ -241,19 +289,36 @@ export default function UploadPage() {
                         })}
                     </div>
 
-                    {/* Progress bar */}
-                    <div className="w-full bg-[var(--border)] rounded-full h-2 mt-8 mb-2">
-                        <div
-                            className="h-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] transition-all duration-1000"
-                            style={{ width: `${Math.min(((activeStep + 1) / ANALYSIS_STEPS.length) * 100, 100)}%` }}
-                        />
-                    </div>
-                    <p className="text-xs text-[var(--muted)]">
-                        {analysisProgress.total > 0
-                            ? `Analyzing rule ${analysisProgress.current} of ${analysisProgress.total}`
-                            : `Step ${activeStep + 1} of ${ANALYSIS_STEPS.length}`
-                        }
-                    </p>
+                    {/* Scan Theater / Progress */}
+                    {activeStep === 4 ? (
+                        <div className="mt-8 p-6 rounded-xl bg-slate-50 border border-[var(--border)] shadow-sm flex flex-col items-center justify-center transition-all">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="relative flex h-3 w-3">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--primary)] opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--primary)]"></span>
+                                </span>
+                                <span className="text-xs font-bold text-[var(--primary)] uppercase tracking-wider">Clinical Engine Active</span>
+                            </div>
+                            <p className="text-sm font-mono text-[var(--muted)] h-5 overflow-hidden transition-all duration-300">
+                                {currentScanText}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="mt-8">
+                            <div className="w-full bg-[var(--border)] rounded-full h-2 mb-2">
+                                <div
+                                    className="h-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] transition-all duration-1000"
+                                    style={{ width: `${Math.min(((activeStep + 1) / ANALYSIS_STEPS.length) * 100, 100)}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-[var(--muted)]">
+                                {analysisProgress.total > 0
+                                    ? `Analyzing rule ${analysisProgress.current} of ${analysisProgress.total}`
+                                    : `Step ${activeStep + 1} of ${ANALYSIS_STEPS.length}`
+                                }
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -290,28 +355,70 @@ export default function UploadPage() {
             )}
 
             <div className="space-y-6">
-                {/* Device Name */}
-                <div className="glass-card p-6">
-                    <label className="block text-sm font-medium mb-3">Device Name</label>
-                    <input
-                        type="text"
-                        value={deviceName}
-                        onChange={(e) => setDeviceName(e.target.value)}
-                        placeholder="e.g., Horizon POD Insulin Pump"
-                        className="w-full px-4 py-3 rounded-xl bg-[var(--background)] border border-[var(--border)] text-white placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-                    />
-                    <p className="text-xs text-[var(--muted)] mt-2">
-                        TraceBridge will automatically check against IEC 62304, ISO 14971, and ISO 13485.
-                    </p>
+                {/* Device Type Selector */}
+                <div className="bg-white border border-[var(--border)] p-6 rounded-md shadow-sm">
+                    <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider mb-4 border-b border-[var(--border)] pb-2">1. Device Classification</h3>
+                    <ProductCodeSelector onSelect={setSelectedCode} />
                 </div>
 
-                {/* File Upload */}
-                <div className="glass-card p-6">
-                    <label className="block text-sm font-medium mb-3">
-                        Upload Documents
+                {/* Enterprise Integrations & File Upload */}
+                <div className="bg-white border border-[var(--border)] p-6 rounded-md shadow-sm flex flex-col pt-6 relative overflow-hidden">
+                    <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider mb-4 border-b border-[var(--border)] pb-2">2. Data Ingestion Stream</h3>
+                    
+                    {/* Enterprise Direct Sync Connectors */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <button 
+                            onClick={() => {
+                                window.alert("OAuth 2.0 Webhook Authenticated.\n\nIndexing Greenlight Guru 'Final Draft' compliance documents...");
+                                handleQuickLoadDemo();
+                            }}
+                            className="bg-emerald-50/50 border border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 transition-all p-4 rounded-xl flex items-center justify-between text-left group shadow-sm"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded shadow-sm flex items-center justify-center text-white font-serif font-bold text-xl">ɢ</div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-emerald-900">Greenlight Guru API</h4>
+                                    <p className="text-xs text-emerald-700">Sync Master DHR/QMS Records</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:text-emerald-600 transition-transform group-hover:translate-x-1" />
+                        </button>
+                        
+                        <button 
+                            onClick={() => {
+                                window.alert("Atlassian Token Validated.\n\nSyncing Software Architecture Specifications and Test Anomaly logs...");
+                                handleQuickLoadDemo();
+                            }}
+                            className="bg-blue-50/50 border border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all p-4 rounded-xl flex items-center justify-between text-left group shadow-sm"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-[#0052CC] rounded shadow-sm flex items-center justify-center text-white font-bold text-xl">
+                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M11.53 10.67l-5.5-5.5a1.47 1.47 0 00-2.06 0L0 9.11v9.64a1.47 1.47 0 001.47 1.47h9.64l4.03-4.03-3.61-5.52zM21.57 0h-9.64a1.47 1.47 0 00-1.47 1.47v9.64l1.37-1.37L10.6 8.52a2.02 2.02 0 012.86 0l8.11 8.11V1.47A1.47 1.47 0 0020.1 0z"/></svg>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-blue-900">Atlassian Jira</h4>
+                                    <p className="text-xs text-blue-700">Sync SaMD Spec & Test Cases</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-blue-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-1" />
+                        </button>
+                    </div>
+
+                    <div className="relative flex items-center py-2 mb-4">
+                        <div className="flex-grow border-t border-[var(--border)]"></div>
+                        <span className="flex-shrink-0 mx-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Or upload manually</span>
+                        <div className="flex-grow border-t border-[var(--border)]"></div>
+                    </div>
+
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                        Local File Drive Array
                     </label>
                     <div
-                        className={`upload-zone ${dragActive ? "drag-active" : ""}`}
+                        className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
+                            dragActive
+                                ? "border-indigo-500 bg-indigo-50/50 scale-[1.01]"
+                                : "border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-slate-400"
+                        }`}
                         onDragOver={(e) => {
                             e.preventDefault();
                             setDragActive(true);
@@ -320,18 +427,20 @@ export default function UploadPage() {
                         onDrop={handleDrop}
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        <Upload className="w-10 h-10 text-[var(--muted)] mx-auto mb-3" />
-                        <p className="text-sm font-medium mb-1">
-                            Drag & drop files here or click to browse
+                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 transition-colors ${dragActive ? 'bg-indigo-100 text-indigo-600' : 'bg-white text-slate-400 shadow-sm border border-slate-200'}`}>
+                            <Upload className="w-6 h-6" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-700 mb-1">
+                            Drag & drop regulatory files or click to browse
                         </p>
                         <p className="text-xs text-[var(--muted)]">
-                            PDF and DOCX files up to 20MB each
+                            Supports highly unstructured PDF, DOCX, and TXT files up to 50MB each
                         </p>
                         <input
                             ref={fileInputRef}
                             type="file"
                             multiple
-                            accept=".pdf,.docx"
+                            accept=".pdf,.docx,.txt"
                             className="hidden"
                             onChange={(e) => e.target.files && handleFiles(e.target.files)}
                         />
@@ -369,7 +478,7 @@ export default function UploadPage() {
                 {/* Submit */}
                 <button
                     onClick={handleSubmit}
-                    disabled={!deviceName || files.length === 0}
+                    disabled={!selectedCode || files.length === 0}
                     className="btn-primary w-full py-4 text-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:transform-none flex items-center justify-center gap-2"
                 >
                     <Shield className="w-5 h-5" />

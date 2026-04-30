@@ -1,0 +1,18 @@
+DOCUMENT: Digital App Brainstorm Notes && Random V1 Tech Stuff
+CREATED: Last Tuesday
+
+Listen, here is what the software needs to do when we launch it in the app store. 
+We need to make sure the users don't break it. So I wrote down some tech specs below for the interns to code:
+
+--- MODULE: ALGORITHM PIPELINE ---
+[REQ-001] The software shall sample the optical sensor array at a frequency of 500Hz +/- 2Hz to prevent aliasing.
+[REQ-002] If CPU temperature exceeds 85C, the software architecture will initiate a hard interrupt and safely cycle power off within 3.5ms.
+[REQ-003] User password hashes shall utilize AES-256-GCM authenticated encryption before being committed to the local SQL datastore.
+[REQ-004] In the event of a lost Bluetooth Low-Energy (BLE) packet stream, the system shall default to State: Offline and buffer up to 400MB of telemetry locally.
+
+--- MODULE: CYBER ARCHITECTURE LOGIC ---
+I drew this on a whiteboard but essentially:
+Database <--> TLS 1.3 <--> Cloud Node
+No ports remain open unless actively transmitting telemetry.
+
+Okay, that's the brainstorm guys. Let's start coding.

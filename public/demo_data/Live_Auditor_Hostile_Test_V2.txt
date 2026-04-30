@@ -1,0 +1,24 @@
+============================================================
+DOCUMENT: TRACEGLOW CARDIO-SYNC - SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+CLASSIFICATION: FDA CLASS II (SOFTWARE AS A MEDICAL DEVICE)
+VERSION: 1.1 Draft
+============================================================
+
+5.1.1 Software Development Plan
+The development of the Cardio-Sync application follows a strict agile lifecycle. The system is built using React Native and interfaces directly with the central Cloud Bluetooth relay. 
+
+7.1.3 Risk Management Integration
+ISO 14971 Risk Management processes were loosely followed by the development team. The engineers held a whiteboard session discussing potential hazards.
+[Note: The formal FMEA table was corrupted and could not be included in this document].
+
+8.1.1 Configuration Management
+A Git repository is used to manage source code versions. 
+All merges to the main branch require a peer review on GitHub. 
+
+8.5.2 Corrective Action (CAPA)
+We currently do not have a Corrective Action process defined for software bugs found in production. Bugs are logged in Jira and worked on when time permits. 
+
+9.0 Cybersecurity Validations
+Penetration testing was performed by a third-party vendor in Q2. AES-256 encryption is implemented for all patient health data (PHI) transmitted over the Bluetooth connection.
+
+[END OF DOCUMENT]

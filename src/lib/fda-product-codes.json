@@ -1,0 +1,164 @@
+[
+  {
+    "code": "DEMO-OMNIPOD",
+    "deviceClass": "Class III",
+    "description": "Demo: Omnipod 5 / Horizon POD (Automated Insulin Delivery)",
+    "regulationNumber": "21 CFR 880.5725",
+    "requiresSoftware": true,
+    "requiresClinical": false,
+    "requiresBiocompatibility": false
+  },
+  {
+    "code": "DEMO-SaMD",
+    "deviceClass": "Class II",
+    "description": "Demo: AI Software as a Medical Device",
+    "regulationNumber": "21 CFR 892.2050",
+    "requiresSoftware": true,
+    "requiresClinical": false,
+    "requiresBiocompatibility": false
+  },
+  {
+    "code": "QAS",
+    "deviceClass": "Class II",
+    "description": "Continuous Glucose Monitor (CGM)",
+    "regulationNumber": "21 CFR 862.1355",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "DQA",
+    "deviceClass": "Class II",
+    "description": "Software as a Medical Device (SaMD) - General",
+    "regulationNumber": "Unclassified",
+    "requiresSoftware": true,
+    "requiresClinical": false,
+    "requiresBiocompatibility": false
+  },
+  {
+    "code": "KXD",
+    "deviceClass": "Class I",
+    "description": "Scalpel, Single-Use",
+    "regulationNumber": "21 CFR 878.4800",
+    "requiresSoftware": false,
+    "requiresClinical": false,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "OZO",
+    "deviceClass": "Class II",
+    "description": "Software Algorithm Device to Assist Users (AI/ML)",
+    "regulationNumber": "21 CFR 892.2050",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": false
+  },
+  {
+    "code": "OQK",
+    "deviceClass": "Class II",
+    "description": "Smartwatch / Wearable ECG",
+    "regulationNumber": "21 CFR 870.2340",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "MUI",
+    "deviceClass": "Class III",
+    "description": "Automated Insulin Delivery System",
+    "regulationNumber": "21 CFR 880.5725",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "LHI",
+    "deviceClass": "Class II",
+    "description": "Thermometer, Electronic, Clinical",
+    "regulationNumber": "21 CFR 880.2910",
+    "requiresSoftware": true,
+    "requiresClinical": false,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "FLL",
+    "deviceClass": "Class I",
+    "description": "Surgical Instrument, Manual",
+    "regulationNumber": "21 CFR 878.4800",
+    "requiresSoftware": false,
+    "requiresClinical": false,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "NBW",
+    "deviceClass": "Class II",
+    "description": "Dental Impression Material",
+    "regulationNumber": "21 CFR 872.3660",
+    "requiresSoftware": false,
+    "requiresClinical": false,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "MYC",
+    "deviceClass": "Class II",
+    "description": "Defibrillator, Automatic, Implantable",
+    "regulationNumber": "21 CFR 870.5310",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "DSQ",
+    "deviceClass": "Class III",
+    "description": "Ventricular Bypass (Assist) Device / Heart Pump",
+    "regulationNumber": "21 CFR 870.3545",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "QVD",
+    "deviceClass": "Class II",
+    "description": "Mobile Medical App (Diagnostic/Monitoring)",
+    "regulationNumber": "Unclassified",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": false
+  },
+  {
+    "code": "PXD",
+    "deviceClass": "Class II",
+    "description": "In Vitro Diagnostic (Over-The-Counter Test Kit)",
+    "regulationNumber": "21 CFR 866.3981",
+    "requiresSoftware": false,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "HRS",
+    "deviceClass": "Class III",
+    "description": "Orthopedic Implant (Hip Replacement Prosthesis)",
+    "regulationNumber": "21 CFR 888.3320",
+    "requiresSoftware": false,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "MQB",
+    "deviceClass": "Class II",
+    "description": "Solid State X-Ray / Radiation Emitting Imager",
+    "regulationNumber": "21 CFR 892.1650",
+    "requiresSoftware": true,
+    "requiresClinical": true,
+    "requiresBiocompatibility": true
+  },
+  {
+    "code": "DXH",
+    "deviceClass": "Class I",
+    "description": "Blood Collection Tube (Phlebotomy)",
+    "regulationNumber": "21 CFR 862.1675",
+    "requiresSoftware": false,
+    "requiresClinical": false,
+    "requiresBiocompatibility": true
+  }
+]

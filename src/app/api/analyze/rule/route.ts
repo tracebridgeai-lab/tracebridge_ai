@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb, adminStorage } from "@/lib/firebase-admin";
-import { queryGeminiREST } from "@/lib/gemini-rest";
+import { queryGeminiRESTArray } from "@/lib/gemini-rest";
 import { GapResult } from "@/lib/firestore-types";
 import { Timestamp } from "firebase-admin/firestore";
 
@@ -73,14 +73,14 @@ export async function POST(request: Request) {
             );
         }
 
-        // Run ONE Gemini call for this rule
-        const geminiResult = await queryGeminiREST(
-            fileBuffers,
-            rule.requirement,
-            rule.standard,
-            rule.section,
-            rule.expectedDocument
-        );
+        const geminiResultArray = await queryGeminiRESTArray(fileBuffers, [{
+            id: rule.id || "",
+            requirement: rule.requirement,
+            standard: rule.standard,
+            section: rule.section,
+            expectedDocument: rule.expectedDocument
+        }]);
+        const geminiResult = geminiResultArray[0];
 
         // Determine compliance status
         let status: "compliant" | "gap_detected" | "needs_review";

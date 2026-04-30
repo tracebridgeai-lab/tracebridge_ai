@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb, verifyIdToken } from "@/lib/firebase-admin";
 
 /**
  * Convert Firestore Timestamp fields to ISO strings for JSON serialization.
@@ -36,7 +36,6 @@ function serializeTimestamps(obj: any): any {
  */
 export async function GET(request: Request) {
     try {
-        // Check if Firebase is initialized
         if (!adminDb) {
             return NextResponse.json(
                 { success: false, error: "Firebase not configured" },
@@ -44,14 +43,35 @@ export async function GET(request: Request) {
             );
         }
 
+        // Authenticate the user via Authorization Bearer token header
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized access: Missing or invalid token" },
+                { status: 401 }
+            );
+        }
+
+        const idToken = authHeader.split("Bearer ")[1];
+        const verification = await verifyIdToken(idToken);
+        
+        if (!verification.success || !verification.uid) {
+            return NextResponse.json(
+                { success: false, error: "Unauthorized access: Token validation failed" },
+                { status: 401 }
+            );
+        }
+        
+        const tenantUid = verification.uid;
+
         const { searchParams } = new URL(request.url);
         const uploadId = searchParams.get("uploadId");
 
         if (uploadId) {
-            // Get specific upload with full results
+            // Get specific upload and enforce Tenant UID
             const uploadDoc = await adminDb.collection("uploads").doc(uploadId).get();
 
-            if (!uploadDoc.exists) {
+            if (!uploadDoc.exists || uploadDoc.data()?.userId !== tenantUid) {
                 return NextResponse.json(
                     { success: false, error: "Upload not found" },
                     { status: 404 }
@@ -116,8 +136,11 @@ export async function GET(request: Request) {
             });
         }
 
-        // Get all uploads (list view)
-        const uploadsSnapshot = await adminDb.collection("uploads").get();
+        // Get all uploads for THIS ISOLATED TENANT
+        const uploadsSnapshot = await adminDb
+            .collection("uploads")
+            .where("userId", "==", tenantUid)
+            .get();
 
         const uploads = await Promise.all(
             uploadsSnapshot.docs.map(async (doc) => {
@@ -161,5 +184,58 @@ export async function GET(request: Request) {
             },
             { status: 500 }
         );
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        if (!adminDb) {
+            return NextResponse.json({ success: false, error: "Firebase not configured" }, { status: 503 });
+        }
+
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ success: false, error: "Unauthorized access: Missing token" }, { status: 401 });
+        }
+
+        const idToken = authHeader.split("Bearer ")[1];
+        const verification = await verifyIdToken(idToken);
+        
+        if (!verification.success || !verification.uid) {
+            return NextResponse.json({ success: false, error: "Unauthorized access: Token failed" }, { status: 401 });
+        }
+        const tenantUid = verification.uid;
+
+        const { searchParams } = new URL(request.url);
+        const uploadId = searchParams.get("uploadId");
+
+        if (!uploadId) {
+            return NextResponse.json({ success: false, error: "Missing uploadId parameter" }, { status: 400 });
+        }
+
+        // Verify ownership
+        const uploadRef = adminDb.collection("uploads").doc(uploadId);
+        const uploadDoc = await uploadRef.get();
+
+        if (!uploadDoc.exists || uploadDoc.data()?.userId !== tenantUid) {
+            return NextResponse.json({ success: false, error: "Upload not found or unauthorized" }, { status: 404 });
+        }
+
+        // Delete cascade: documents, gapResults, then the upload
+        const batch = adminDb.batch();
+        
+        const docsSnapshot = await adminDb.collection("documents").where("uploadId", "==", uploadId).get();
+        docsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+        const gapsSnapshot = await adminDb.collection("gapResults").where("uploadId", "==", uploadId).get();
+        gapsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+        batch.delete(uploadRef);
+        await batch.commit();
+
+        return NextResponse.json({ success: true, message: "Upload deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting report:", error);
+        return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Failed to delete" }, { status: 500 });
     }
 }

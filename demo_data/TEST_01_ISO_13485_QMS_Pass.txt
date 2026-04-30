@@ -1,0 +1,8 @@
+DOCUMENT ID: QMS-001
+TITLE: Quality Management System Manual
+STANDARD: ISO 13485:2016
+DATE: 2026-04-20
+
+SECTION 4.2.1: QMS Documentation Output
+The TraceBridge Quality Management System explicitly comprises the Quality Manual, defined documented procedures, and strict maintenance of records. All documentation is controlled via the electronic vault and versioned cryptographically.
+Section 8.2: Internal audits are conducted biennially using a phase-gated statistical sampling algorithm (p=0.05 margin) verifying systemic conformity.

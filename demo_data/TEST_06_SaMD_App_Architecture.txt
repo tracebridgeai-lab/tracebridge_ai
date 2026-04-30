@@ -1,0 +1,9 @@
+DOCUMENT ID: SAMD-006
+TITLE: Product Definition
+DEVICE CLASS: Software as a Medical Device (SaMD)
+STANDARD: FDA GENERAL RULES
+DATE: 2026-04-20
+
+SECTION: Physical Characteristics
+The TraceBridge Cognitive Therapy Application is entirely comprised of compiled digital binaries. It exists only on Commercial-Off-The-Shelf (COTS) smartphones. 
+Because the application is 100% digital and does not contain any physical hardware, wiring, or chemical polymers, there are no biological patient touchpoints. All physical interaction occurs exclusively through the user's personal cellular hardware screen.

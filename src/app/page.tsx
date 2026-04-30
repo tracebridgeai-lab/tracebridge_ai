@@ -6,216 +6,162 @@ import {
   FileSearch,
   BarChart3,
   ArrowRight,
-  Sparkles,
   Database,
   Brain,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-7 h-7 text-[var(--primary)]" />
-            <span className="text-lg font-bold gradient-text">TraceBridge AI</span>
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+      {/* Enterprise Header */}
+      <header className="bg-slate-900 text-white border-b border-slate-800 shrink-0">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-3">
+            <Shield className="w-5 h-5 text-blue-400" />
+            <span className="font-bold tracking-widest uppercase">TraceBridge AI Systems</span>
+            <span className="hidden md:inline text-slate-400 ml-4 border-l border-slate-700 pl-4">
+              Enterprise Regulatory Intelligence Engine
+            </span>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-[var(--muted)]">
-            <a href="#features" className="hover:text-white transition-colors">
-              Features
-            </a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">
-              How It Works
-            </a>
-            <a href="#standards" className="hover:text-white transition-colors">
-              Standards
-            </a>
-          </nav>
-          <Link href="/login" className="btn-primary text-sm flex items-center gap-2">
-            Launch App <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-slate-400 text-xs hidden sm:flex">
+              <Lock className="w-3 h-3" /> SOC-2 Compliant Environment
+            </div>
+            <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors">
+              System Login
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-sm text-[var(--primary)]">
-            <Sparkles className="w-4 h-4" />
-            Powered by Google Gemini AI
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            Regulatory Gap
-            <br />
-            <span className="gradient-text">Detection Engine</span>
-          </h1>
-          <p className="text-lg md:text-xl text-[var(--muted)] mb-10 max-w-2xl mx-auto leading-relaxed">
-            Upload your medical device V&V documentation. TraceBridge AI
-            identifies compliance gaps across IEC 62304, ISO 14971, and ISO
-            13485 — with AI-powered citations from your actual documents.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/login"
-              className="btn-primary text-lg px-8 py-4 flex items-center justify-center gap-2"
-            >
-              Start Analysis <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/login"
-              className="btn-secondary text-lg px-8 py-4 flex items-center justify-center gap-2"
-            >
-              View Dashboard
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              Three-Layer Gap Detection
-            </h2>
-            <p className="text-[var(--muted)] max-w-lg mx-auto">
-              Deterministic rules meet semantic AI for comprehensive compliance
-              analysis.
+      {/* Main Content Layout - 2 Columns Desktop */}
+      <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full grid lg:grid-cols-[1fr_350px] gap-8">
+        
+        {/* Left Column: Dense Information Architecture */}
+        <div className="space-y-8">
+          
+          {/* Main Title Portal */}
+          <div className="bg-white border border-slate-300 shadow-sm rounded-md p-8">
+            <h1 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight border-b border-slate-200 pb-4">
+              Automated Traceability & Gap Detection
+            </h1>
+            <p className="text-slate-600 leading-relaxed text-sm mb-6 max-w-3xl">
+              TraceBridge AI directly ingests complex Medical Device Software documentation (Risk Management, DHR, SRS, V&V Protocols) and performs multi-layered deterministic audits against FDA 510(k) and ISO standards. The engine replaces manual traceability matrix reviews with deterministic citations generated by a private Google Gemini semantic backend.
             </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="glass-card p-8 transition-all duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center mb-5">
-                <Database className="w-6 h-6 text-[var(--primary)]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">
-                Step A: Rule Engine
-              </h3>
-              <p className="text-[var(--muted)] text-sm leading-relaxed">
-                153+ compliance rules from IEC 62304, ISO 14971, and ISO 13485
-                stored in PostgreSQL. Deterministic — no guessing.
-              </p>
-            </div>
-            <div className="glass-card p-8 transition-all duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center mb-5">
-                <Brain className="w-6 h-6 text-[var(--accent)]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">
-                Step B: Gemini Search
-              </h3>
-              <p className="text-[var(--muted)] text-sm leading-relaxed">
-                For each rule, Gemini File Search scans your uploaded documents
-                for evidence. Returns citations with exact quotes.
-              </p>
-            </div>
-            <div className="glass-card p-8 transition-all duration-300">
-              <div className="w-12 h-12 rounded-xl bg-[var(--success)]/10 flex items-center justify-center mb-5">
-                <CheckCircle2 className="w-6 h-6 text-[var(--success)]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-3">
-                Step C: Gap Verdict
-              </h3>
-              <p className="text-[var(--muted)] text-sm leading-relaxed">
-                Combines deterministic rules with semantic results. No evidence
-                found? Gap. Partial? Needs review. Full evidence? Compliant.
-              </p>
+            <div className="flex gap-4">
+              <Link href="/login" className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded text-sm font-bold flex items-center gap-2 transition-colors">
+                Initialize Audit Workflow <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-6 border-t border-[var(--border)]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-16">How It Works</h2>
-          <div className="space-y-8">
-            {[
-              {
-                num: "01",
-                title: "Upload Documents",
-                desc: "Upload your V&V packages, test protocols, design documents, and risk analyses as PDF or DOCX files.",
-                icon: FileSearch,
-              },
-              {
-                num: "02",
-                title: "AI Analysis",
-                desc: "Gemini AI scans your documents against IEC 62304, ISO 14971, and ISO 13485, returning citations with exact quotes.",
-                icon: Brain,
-              },
-              {
-                num: "03",
-                title: "Gap Report",
-                desc: "Receive a structured report showing what FDA requires, what you submitted, identified gaps, and remediation steps.",
-                icon: BarChart3,
-              },
-            ].map((step, i) => (
-              <div key={i} className="flex gap-6 items-start">
-                <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center">
-                  <span className="text-[var(--primary)] font-bold text-lg">
-                    {step.num}
-                  </span>
+          {/* Engine Architecture Grid */}
+          <div>
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">Core Engine Capabilities</h2>
+            <div className="grid md:grid-cols-3 gap-0 border border-slate-300 rounded-md bg-white overflow-hidden shadow-sm">
+              <div className="p-6 border-b md:border-b-0 md:border-r border-slate-300">
+                <Database className="w-6 h-6 text-blue-600 mb-3" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Deterministic Rules</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  153+ strict constraints hardcoded from IEC 62304, ISO 14971, and ISO 13485 mapped directly to a massive PostgreSQL architecture database.
+                </p>
+              </div>
+              <div className="p-6 border-b md:border-b-0 md:border-r border-slate-300 bg-slate-50">
+                <Brain className="w-6 h-6 text-emerald-600 mb-3" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Semantic Evaluation</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Engine utilizes Google Gemini specialized routing to parse 100+ page clinical PDFs, extracting exact quotes to satisfy database constraints.
+                </p>
+              </div>
+              <div className="p-6">
+                <CheckCircle2 className="w-6 h-6 text-blue-800 mb-3" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Verdict Triangulation</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Output is merged into strict JSON generating a mathematically sound trace matrix showing complete compliance, partial reviews, or missing evidence.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column: Workflows and Standards */}
+        <div className="space-y-6">
+          
+          <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden">
+            <div className="bg-slate-100 border-b border-slate-300 px-4 py-3">
+              <h2 className="text-xs font-bold text-slate-700 uppercase tracking-widest">Regulated Frameworks</h2>
+            </div>
+            <div className="p-0 divide-y divide-slate-200">
+              <div className="p-4 hover:bg-slate-50 transition-colors">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold text-slate-900">IEC 62304:2006</span>
+                  <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded uppercase">Active</span>
                 </div>
+                <p className="text-xs text-slate-600">Medical Device Software Lifecycle</p>
+              </div>
+              <div className="p-4 hover:bg-slate-50 transition-colors">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold text-slate-900">ISO 14971:2019</span>
+                  <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded uppercase">Active</span>
+                </div>
+                <p className="text-xs text-slate-600">Risk Management Processing</p>
+              </div>
+              <div className="p-4 hover:bg-slate-50 transition-colors">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold text-slate-900">ISO 13485:2016</span>
+                  <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded uppercase">Active</span>
+                </div>
+                <p className="text-xs text-slate-600">Quality Management Systems</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-slate-300 shadow-sm rounded-md overflow-hidden">
+            <div className="bg-slate-100 border-b border-slate-300 px-4 py-3">
+              <h2 className="text-xs font-bold text-slate-700 uppercase tracking-widest">Workflow Index</h2>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="flex gap-3">
+                <FileSearch className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
-                    <step.icon className="w-5 h-5 text-[var(--primary)]" />
-                    {step.title}
-                  </h3>
-                  <p className="text-[var(--muted)] leading-relaxed">
-                    {step.desc}
-                  </p>
+                  <span className="text-sm font-bold text-slate-800 block">1. File Ingestion</span>
+                  <span className="text-xs text-slate-500">Secure File API handles 20MB+ PDFs natively.</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Standards */}
-      <section id="standards" className="py-20 px-6 border-t border-[var(--border)]">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-12">Supported Standards</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "IEC 62304:2006",
-                desc: "Medical Device Software Lifecycle",
-                rules: "~93 rules",
-              },
-              {
-                name: "ISO 14971:2019",
-                desc: "Risk Management for Medical Devices",
-                rules: "~26 rules",
-              },
-              {
-                name: "ISO 13485:2016",
-                desc: "Quality Management Systems",
-                rules: "~34 rules",
-              },
-            ].map((std, i) => (
-              <div key={i} className="glass-card p-6">
-                <h3 className="text-lg font-bold gradient-text mb-2">
-                  {std.name}
-                </h3>
-                <p className="text-sm text-[var(--muted)] mb-3">{std.desc}</p>
-                <span className="badge badge-compliant">{std.rules}</span>
+              <div className="flex gap-3">
+                <BarChart3 className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-sm font-bold text-slate-800 block">2. Gap Generation</span>
+                  <span className="text-xs text-slate-500">System throttles processing to abide by rate limits.</span>
+                </div>
               </div>
-            ))}
+              <div className="flex gap-3">
+                <Shield className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="text-sm font-bold text-slate-800 block">3. Result Output</span>
+                  <span className="text-xs text-slate-500">Matrix formats directly for auditor review.</span>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="py-10 px-6 border-t border-[var(--border)]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[var(--primary)]" />
-            <span className="font-semibold gradient-text">TraceBridge AI</span>
+      <footer className="bg-slate-900 text-slate-400 py-6 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-xs">
+          <div className="flex items-center gap-2 mb-4 md:mb-0">
+            <Shield className="w-4 h-4 text-blue-500" />
+            <span className="font-bold text-slate-300 tracking-wider">TRACEBRIDGE AI</span>
           </div>
-          <p className="text-sm text-[var(--muted)]">
-            Phase 2 — Powered by Google Gemini + PostgreSQL
-          </p>
+          <div className="flex gap-6">
+            <span>Enterprise Distribution Phase 2</span>
+            <span>Cloud Infrastructure Active</span>
+          </div>
         </div>
       </footer>
     </div>

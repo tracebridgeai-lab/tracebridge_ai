@@ -1,0 +1,8 @@
+DOCUMENT ID: CYBER-005
+TITLE: Pre-Market Cybersecurity Management Plan
+STANDARD: FDA CYBERSECURITY GUIDANCE
+
+SECTION V: Device Security
+Our medical device is highly secure. We implemented AES-256 encryption on all Bluetooth channels to prevent hackers. The software engineering team promises that all third-party dependencies are perfectly safe and we don't use any bad open source code. 
+We run an anti-virus scanner periodically. 
+(Note: The SBOM and CVE tracking matrix is omitted because our dependencies change too frequently to document them all mathematically).

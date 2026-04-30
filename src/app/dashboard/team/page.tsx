@@ -185,7 +185,7 @@ export default function TeamPage() {
                             value={teamName}
                             onChange={(e) => setTeamName(e.target.value)}
                             placeholder="Team name (e.g., Regulatory Affairs)"
-                            className="flex-1 px-4 py-3 rounded-xl bg-[var(--input)] border border-[var(--border)] text-white text-sm focus:outline-none focus:border-[var(--primary)]"
+                            className="flex-1 px-4 py-3 rounded-xl bg-[var(--input)] border border-[var(--border)] text-slate-900 text-sm focus:outline-none focus:border-[var(--primary)]"
                             onKeyDown={(e) => e.key === "Enter" && createTeam()}
                         />
                         <button
@@ -310,7 +310,7 @@ export default function TeamPage() {
                                         value={inviteEmail}
                                         onChange={(e) => setInviteEmail(e.target.value)}
                                         placeholder="colleague@company.com"
-                                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-[var(--input)] border border-[var(--border)] text-white text-sm focus:outline-none focus:border-[var(--primary)]"
+                                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-[var(--input)] border border-[var(--border)] text-slate-900 text-sm focus:outline-none focus:border-[var(--primary)]"
                                         onKeyDown={(e) => e.key === "Enter" && inviteMember()}
                                     />
                                 </div>

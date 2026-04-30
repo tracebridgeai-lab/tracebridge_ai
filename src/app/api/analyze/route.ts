@@ -47,6 +47,8 @@ async function runAnalysisInBackground(uploadId: string): Promise<void> {
                 let mimeType = "application/pdf";
                 if (fileType === "docx") {
                     mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+                } else if (fileType === "txt") {
+                    mimeType = "text/plain";
                 }
 
                 fileBuffers.push({ data: buffer, mimeType, name: fileName });

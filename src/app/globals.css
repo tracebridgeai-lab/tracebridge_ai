@@ -1,22 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #e4e4e7;
-  --card: #111118;
-  --card-hover: #1a1a24;
-  --border: #27272a;
-  --primary: #6366f1;
-  --primary-hover: #818cf8;
-  --accent: #22d3ee;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --muted: #71717a;
+  /* Medical Enterprise Light Theme */
+  --background: #f8fafc;     /* Clean slate-50 background */
+  --foreground: #0f172a;     /* Deep slate-900 for absolute contrast */
+  --card: #ffffff;           /* Sterile pure white cards */
+  --card-hover: #f1f5f9;     /* Subtle interactive grey */
+  --border: #e2e8f0;         /* Slate-200 clinical borders */
+  
+  /* Semantic Brand Colors (No neon) */
+  --primary: #0369a1;        /* Trusted Medical Sky Blue (700) */
+  --primary-hover: #075985;
+  --accent: #0f766e;         /* Teal accent for secondary actions */
+  
+  /* Strict Status Indicators */
+  --success: #15803d;        /* Deep green for compliance */
+  --warning: #b45309;        /* Deep amber for warnings */
+  --danger: #b91c1c;         /* Harsh red for FDA rejection risk */
+  --muted: #64748b;          /* Professional secondary text */
 }
 
+/* Light scheme forcing */
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -25,185 +31,111 @@ body {
   min-height: 100vh;
 }
 
-/* Glassmorphism card */
+/* Flat Enterprise Card (Replaces Glass-Card) */
 .glass-card {
-  background: rgba(17, 17, 24, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Minimal generic shadow */
 }
 
 .glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #6366f1, #22d3ee);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Button styles */
+/* Regulatory Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: var(--primary);
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.2s;
-  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background-color 0.15s;
+  border: 1px solid transparent;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #818cf8, #6366f1);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+  background: var(--primary-hover);
 }
 
 .btn-secondary {
-  background: rgba(39, 39, 42, 0.5);
+  background: var(--card);
   color: var(--foreground);
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  transition: all 0.2s;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.15s;
   border: 1px solid var(--border);
   cursor: pointer;
 }
 
 .btn-secondary:hover {
-  background: rgba(39, 39, 42, 0.8);
-  border-color: var(--primary);
+  background: var(--card-hover);
+  border-color: #cbd5e1;
 }
 
-/* Status badges */
+/* Status badges (Highly readable) */
 .badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border-width: 1px;
 }
 
 .badge-compliant {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: #f0fdf4;
+  color: var(--success);
+  border-color: #bbf7d0;
 }
 
 .badge-gap {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: #fef2f2;
+  color: var(--danger);
+  border-color: #fecaca;
 }
 
 .badge-review {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.badge-critical {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
-
-.badge-major {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-}
-
-.badge-minor {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
-}
-
-/* Animated gradient border */
-.gradient-border {
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #6366f1, #22d3ee, #6366f1);
-  background-size: 200% 200%;
-  animation: gradientMove 3s ease infinite;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  pointer-events: none;
-}
-
-@keyframes gradientMove {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Pulse animation */
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
-  }
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s ease infinite;
-}
-
-/* Score ring animation */
-@keyframes scoreIn {
-  from {
-    stroke-dashoffset: 283;
-  }
+  background: #fffbeb;
+  color: var(--warning);
+  border-color: #fde68a;
 }
 
 /* File upload area */
 .upload-zone {
   border: 2px dashed var(--border);
-  border-radius: 16px;
-  padding: 2rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 3rem 2rem;
   text-align: center;
-  transition: all 0.3s;
+  transition: all 0.2s;
   cursor: pointer;
 }
 
 .upload-zone:hover,
 .upload-zone.drag-active {
   border-color: var(--primary);
-  background: rgba(99, 102, 241, 0.05);
+  background: #f0f9ff;
 }
 
-/* Scrollbar */
+/* Scrollbar (Clean slate) */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: #94a3b8;
 }

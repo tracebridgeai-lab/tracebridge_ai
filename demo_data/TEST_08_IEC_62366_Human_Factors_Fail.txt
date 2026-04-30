@@ -1,0 +1,9 @@
+DOCUMENT ID: HF-008
+TITLE: Formative Usability Engineering Report
+STANDARD: IEC 62366
+DATE: 2026-04-20
+
+SECTION: User Test Pool Demographics
+We conducted extensive human factors testing on the surgical interface to ensure safety and prevent use-errors. We brought in 15 test subjects and asked them to read the screen.
+The test pool consisted exclusively of our internal 25-30 year old engineering staff who already built the software. They all found the 8-point font to be highly readable. We conclude the device is perfectly usable for all clinical populations.
+(Note: Did not test actual intended users (e.g. 60+ year old nurses) nor naive users as strictly required by FDA Human Factors guidelines).

@@ -1,6 +1,6 @@
 import { adminDb } from "./firebase-admin";
-import { queryGeminiREST } from "./gemini-rest";
-import { ComplianceRule, GapResult } from "./firestore-types";
+import { queryGeminiRESTArray } from "./gemini-rest";
+import { ComplianceRule, GapResult, Upload } from "./firestore-types";
 import { Timestamp } from "firebase-admin/firestore";
 
 export interface GapReportItem {
@@ -11,6 +11,8 @@ export interface GapReportItem {
     severity: "critical" | "major" | "minor";
     citations: { source: string; section: string; quote: string }[];
     status: "compliant" | "gap_detected" | "needs_review";
+    reasoning?: string;
+    missingEvidence?: string;
 }
 
 /**
@@ -50,8 +52,14 @@ export async function getRulesForStandards(standards: string[]): Promise<Complia
 function determineSeverity(
     standard: string,
     section: string,
-    requiredForClass: string | null | undefined
+    requiredForClass: string | null | undefined,
+    deviceClass?: string
 ): "critical" | "major" | "minor" {
+    // Soften requiredForClass penalties if the device is a lowly Class I device
+    if (deviceClass === "Class I" && requiredForClass && requiredForClass !== "Class I") {
+        return "minor";
+    }
+
     // Risk management and safety-related requirements are critical
     if (
         standard.includes("14971") ||
@@ -61,8 +69,8 @@ function determineSeverity(
         return "critical";
     }
 
-    // Class C requirements are critical
-    if (requiredForClass === "C") {
+    // High classification mandates stricter penalties
+    if (deviceClass === "Class III" || requiredForClass === "Class III" || requiredForClass === "C") {
         return "critical";
     }
 
@@ -95,119 +103,169 @@ export async function runGapAnalysis(
 
     const results: GapReportItem[] = [];
 
-    // Step B: For each rule, query Gemini for evidence
-    for (let i = 0; i < rules.length; i++) {
-        const rule = rules[i];
+    // Filter out non-applicable rules generically
+    let applicableRules = rules.filter(r => 
+        r.expectedDocument !== "(Not applicable)" &&
+        r.expectedDocument !== "- not applicable -" &&
+        r.expectedDocument.trim() !== ""
+    );
 
-        // Skip non-applicable rules  
-        if (
-            rule.expectedDocument === "(Not applicable)" ||
-            rule.expectedDocument === "- not applicable -" ||
-            rule.expectedDocument.trim() === ""
-        ) {
-            continue;
+    // DYNAMIC RULE PURGE OPTIMIZATION: Check FDA Product Code features to delete massive rule categories
+    let uploadData: Upload | null = null;
+    if (adminDb && uploadId) {
+        const uploadDoc = await adminDb.collection("uploads").doc(uploadId).get();
+        if (uploadDoc.exists) {
+            uploadData = uploadDoc.data() as Upload;
+            const features = uploadData.features;
+
+            if (features) {
+                // If the device has no software, instantly eliminate IEC 62304 and Cyber rules.
+                if (features.requiresSoftware === false) {
+                    applicableRules = applicableRules.filter(r => 
+                        !r.standard.includes("62304") && 
+                        !r.requirement.toLowerCase().includes("software") &&
+                        !r.requirement.toLowerCase().includes("cybersecurity")
+                    );
+                }
+                
+                // If it is a generic device requiring no trials, skip clinical data rules.
+                if (features.requiresClinical === false) {
+                    applicableRules = applicableRules.filter(r => 
+                        !r.requirement.toLowerCase().includes("clinical") &&
+                        !r.requirement.toLowerCase().includes("human factors")
+                    );
+                }
+
+                // If it doesn't touch the patient, skip biocompatibility entirely.
+                if (features.requiresBiocompatibility === false) {
+                    applicableRules = applicableRules.filter(r => 
+                        !r.standard.includes("10993") &&
+                        !r.section.toLowerCase().includes("biocomp") &&
+                        !r.requirement.toLowerCase().includes("biocompatibility")
+                    );
+                }
+            }
+        }
+    }
+
+    // Chunking function to prevent MAX_TOKENS output limits
+    const chunkArray = (arr: any[], size: number) =>
+        Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+            arr.slice(i * size, i * size + size)
+        );
+
+    const ruleChunks = chunkArray(applicableRules, 15);
+    let geminiBatchResults: any[] = [];
+
+    for (let c = 0; c < ruleChunks.length; c++) {
+        const chunk = ruleChunks[c];
+        let chunkSuccess = false;
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (!chunkSuccess && retryCount <= maxRetries) {
+            try {
+                // STRICT FREE TIER TOKEN LIMIT THROTTLING: 1 Million Tokens / Min
+                // We MUST mathematically pace massive documents over a minute to survive the Token quota.
+                if (c > 0 || retryCount > 0) {
+                    const delay = 35000 + (retryCount > 0 ? Math.pow(2, retryCount) * 8000 : 0);
+                    console.log(`[Gap Engine] Strict Token Rate Limit Pause for ${delay}ms... (Chunk ${c+1}/${ruleChunks.length}, Attempt ${retryCount+1})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+
+                const chunkResults = await queryGeminiRESTArray(fileBuffers, chunk.map(r => ({
+                    id: r.id || "",
+                    requirement: r.requirement,
+                    standard: r.standard,
+                    section: r.section,
+                    expectedDocument: r.expectedDocument
+                })));
+                
+                geminiBatchResults = geminiBatchResults.concat(chunkResults);
+                chunkSuccess = true; // Escapes loop
+                
+            } catch(err: any) {
+                console.error(`[Gap Engine] Chunk Analysis Crash (Attempt ${retryCount+1}): `, err.message);
+                
+                if (retryCount < maxRetries) {
+                    console.warn(`[Gap Engine] Transient API failure caught. Escalating backoff and retrying chunk ${c+1}...`);
+                    retryCount++;
+                } else {
+                    // Fallback: entire chunk failed permanently after max retries
+                    console.error(`[Gap Engine] EXHAUSTED RETRIES. Chunk ${c+1} failed permanently. Defaulting to Gap.`);
+                    const chunkFails = chunk.map(r => ({
+                        ruleId: r.id,
+                        found: false,
+                        confidence: "low",
+                        citations: [],
+                        reasoning: `Fatal API Error after ${maxRetries} retries: ${err instanceof Error ? err.message : "Capacity failure"}`,
+                    }));
+                    geminiBatchResults = geminiBatchResults.concat(chunkFails);
+                    chunkSuccess = true; // Escapes loop safely
+                }
+            }
+        }
+    }
+
+    // Map AI output back to individual Firestore records
+    for (const rule of rules) {
+        // Find if this rule was skipped because of "(Not applicable)"
+        const isApplicable = applicableRules.some(r => r.id === rule.id);
+        if (!isApplicable) continue;
+
+        // Find its mapped result
+        const geminiResult = geminiBatchResults.find(r => r.ruleId === rule.id) || {
+            found: false,
+            confidence: "low",
+            citations: [],
+            analytical_reasoning: "Missing ruleId in AI batch output.",
+            exact_missing_evidence: "System failure rendering evidence."
+        };
+
+        let status: "compliant" | "gap_detected" | "needs_review";
+
+        if (geminiResult.found && (geminiResult.confidence === "high" || geminiResult.confidence === "medium")) {
+            status = "compliant";
+        } else if (geminiResult.found && geminiResult.confidence === "low") {
+            status = "needs_review";
+        } else {
+            status = "gap_detected";
         }
 
-        try {
-            // Add delay between requests to avoid rate limiting (except for first request)
-            if (i > 0) {
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
-            }
+        const severity = determineSeverity(rule.standard, rule.section, rule.requiredForClass, uploadData?.deviceClass);
 
-            const geminiResult = await queryGeminiREST(
-                fileBuffers,
-                rule.requirement,
-                rule.standard,
-                rule.section,
-                rule.expectedDocument
-            );
+        const gapItem: GapReportItem = {
+            gap_title: status === "compliant" ? `${rule.requirement} - Verified` : `Missing: ${rule.requirement}`,
+            standard: rule.standard,
+            section: rule.section,
+            missing_requirement: rule.requirement,
+            severity,
+            citations: geminiResult.citations || [],
+            status,
+            reasoning: geminiResult.analytical_reasoning,
+            missingEvidence: geminiResult.exact_missing_evidence
+        };
 
-            // Step C: Combine deterministic + semantic results
-            // BUG-003 FIX: medium confidence = compliant (synonym matches, alternate wording)
-            let status: "compliant" | "gap_detected" | "needs_review";
+        results.push(gapItem);
 
-            if (geminiResult.found && (geminiResult.confidence === "high" || geminiResult.confidence === "medium")) {
-                status = "compliant";
-            } else if (geminiResult.found && geminiResult.confidence === "low") {
-                status = "needs_review";
-            } else {
-                status = "gap_detected";
-            }
+        const gapResultData: GapResult = {
+            uploadId,
+            standard: rule.standard,
+            section: rule.section,
+            requirement: rule.requirement,
+            status,
+            severity,
+            gapTitle: gapItem.gap_title,
+            missingRequirement: rule.requirement,
+            citations: geminiResult.citations || [],
+            reasoning: geminiResult.analytical_reasoning || "No analytical reasoning provided.",
+            missingEvidence: geminiResult.exact_missing_evidence || "No specific missing evidence identified.",
+            geminiResponse: JSON.stringify(geminiResult, null, 2),
+            createdAt: Timestamp.now(),
+        };
 
-            const severity = determineSeverity(
-                rule.standard,
-                rule.section,
-                rule.requiredForClass
-            );
-
-            const gapItem: GapReportItem = {
-                gap_title: status === "compliant"
-                    ? `${rule.requirement} - Verified`
-                    : `Missing: ${rule.requirement}`,
-                standard: rule.standard,
-                section: rule.section,
-                missing_requirement: rule.requirement,
-                severity,
-                citations: geminiResult.citations,
-                status,
-            };
-
-            results.push(gapItem);
-
-            // Save to Firestore
-            const gapResultData: GapResult = {
-                uploadId,
-                standard: rule.standard,
-                section: rule.section,
-                requirement: rule.requirement,
-                status,
-                severity,
-                gapTitle: gapItem.gap_title,
-                missingRequirement: rule.requirement,
-                citations: geminiResult.citations,
-                geminiResponse: geminiResult.rawResponse,
-                createdAt: Timestamp.now(),
-            };
-
-            if (adminDb) {
-                await adminDb.collection("gapResults").add(gapResultData);
-            }
-        } catch (error) {
-            console.error(
-                `Error analyzing rule ${rule.standard} ${rule.section}:`,
-                error
-            );
-
-            // Mark as needs_review if Gemini fails for this rule
-            const gapItem: GapReportItem = {
-                gap_title: `Review Required: ${rule.requirement}`,
-                standard: rule.standard,
-                section: rule.section,
-                missing_requirement: rule.requirement,
-                severity: "major",
-                citations: [],
-                status: "needs_review",
-            };
-
-            results.push(gapItem);
-
-            const gapResultData: GapResult = {
-                uploadId,
-                standard: rule.standard,
-                section: rule.section,
-                requirement: rule.requirement,
-                status: "needs_review",
-                severity: "major",
-                gapTitle: gapItem.gap_title,
-                missingRequirement: rule.requirement,
-                citations: [],
-                geminiResponse: `Error: ${error instanceof Error ? error.message : "Unknown"}`,
-                createdAt: Timestamp.now(),
-            };
-
-            if (adminDb) {
-                await adminDb.collection("gapResults").add(gapResultData);
-            }
+        if (adminDb) {
+            await adminDb.collection("gapResults").add(gapResultData);
         }
     }
 

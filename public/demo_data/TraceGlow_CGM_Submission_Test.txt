@@ -1,0 +1,39 @@
+# Software Requirements & QMS Excerpt
+**Product:** TraceGlow Continuous Glucose Monitor (CGM) v2.0
+**Document Type:** Software Requirements Specification (SRS) & Quality Manual Excerpt
+**Date:** April 20, 2026
+**Confidentiality:** Internal Use Only
+
+## 1. Introduction
+This document outlines the software requirements and basic quality management framework for the TraceGlow CGM v2.0. This system involves an embedded sensor and a mobile application running on iOS and Android.
+
+## 2. Software Lifecycle Processes (IEC 62304)
+
+### 2.1 Software Development Plan
+The software development process follows a hybrid Agile-V model. A formal Software Development Plan (SDP) is maintained in our internal Confluence workspace. 
+
+*Engineer Note: We still need to formalize the software system testing procedures before launch.*
+
+### 2.2 Software Architecture
+The mobile application interfaces directly with the CGM sensor via Bluetooth Low Energy (BLE). The software architecture is cleanly separated into presentation, business logic, and communication layers to isolate risks. The architecture has been reviewed and approved by the Software Engineering Lead.
+
+### 2.3 Software Risk Management
+We utilize basic hazard analysis for the software. If a bug occurs, the mobile app attempts to restart. 
+
+*Auditor Warning Trigger: Notice the severe lack of proper ISO 14971 risk management standards here. We do not evaluate probability and severity matrices as required by FDA standards.*
+
+## 3. Quality Management System (ISO 13485)
+
+### 3.1 Document Control
+All documents, including this SRS, are controlled via our Electronic Document Management System (eDMS). Documents are assigned unique revision numbers and require dual-signature electronic approval before release in accordance with CFR 21 Part 11.
+
+### 3.2 Product Realization & Design Controls
+Design inputs are established based on user needs. Design outputs are verified against inputs. A formal design review is held at the end of each major software iteration. All design control records are maintained in the Design History File (DHF).
+
+### 3.3 Post-Market Surveillance (PMS)
+Customer complaints are logged into our Zendesk portal. Engineering occasionally reviews these tickets to identify potential bugs in the software.
+
+*Auditor Warning Trigger: The FDA requires a formal, proactive post-market surveillance plan including advisory notices and MDR reporting. Zendesk is insufficient.*
+
+---
+**End of Document**

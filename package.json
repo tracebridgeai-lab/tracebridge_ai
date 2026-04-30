@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "seed:firestore": "npx tsx scripts/seed-firestore.ts",
-    "parse:templates": "npx tsx scripts/parse-templates.ts"
+    "parse:templates": "npx tsx scripts/parse-templates.ts",
+    "eval:hostile": "npx tsx scripts/eval-engine.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "docx": "^9.6.1",
     "dotenv": "^17.2.4",
     "firebase": "^12.9.0",
     "firebase-admin": "^13.6.1",

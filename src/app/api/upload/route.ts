@@ -19,13 +19,31 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { deviceName, files, idToken } = body;
-        // Auto-default to all 3 standards
-        const standards = body.standards || [
-            "IEC 62304:2006",
-            "ISO 14971:2019",
-            "ISO 13485:2016",
-        ];
+        const { deviceName, productCode, files, idToken } = body;
+
+        // Authoritative FDA Code Lookup
+        let fdaData = null;
+        try {
+            const fdaCodes = require("@/lib/fda-product-codes.json");
+            fdaData = fdaCodes.find((c: any) => c.code === productCode);
+        } catch (err) {
+            console.warn("Failed to load FDA product codes", err);
+        }
+
+        const safeFeatures = fdaData ? {
+            requiresSoftware: fdaData.requiresSoftware,
+            requiresClinical: fdaData.requiresClinical,
+            requiresBiocompatibility: fdaData.requiresBiocompatibility
+        } : body.features || { requiresSoftware: true, requiresClinical: true, requiresBiocompatibility: true };
+
+        const deviceClass = fdaData?.deviceClass || "Unknown";
+        const regulationNumber = fdaData?.regulationNumber || "Unknown";
+
+        // Dynamically build applicable standards
+        const standards = ["ISO 13485:2016", "ISO 14971:2019"];
+        if (safeFeatures.requiresSoftware) {
+            standards.push("IEC 62304:2006");
+        }
 
         // Validate required fields
         if (!deviceName || !files || !Array.isArray(files) || files.length === 0) {
@@ -58,6 +76,10 @@ export async function POST(request: Request) {
         const uploadData: Upload = {
             userId,
             deviceName,
+            productCode: productCode || "Unknown",
+            deviceClass,
+            regulationNumber,
+            features: safeFeatures,
             standards,
             status: "pending",
             createdAt: Timestamp.now(),

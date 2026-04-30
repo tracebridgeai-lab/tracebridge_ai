@@ -1,0 +1,9 @@
+DOCUMENT ID: RISK-004
+TITLE: Risk Management File
+STANDARD: ISO 14971
+DATE: 2026-04-20
+
+SECTION: Risk Control
+We identified some hazards with the system crashing. If the system crashes, it could cause harm to the patient. We designed a backup system to stop the crash.
+The management team feels good about this. We think it's very safe. We decided that the risk is acceptable because the benefits of the medical device are better than the risks. 
+(Note: Missing actual Probability and Severity matrix quantification scores. Missing risk/benefit threshold criteria algorithm.)

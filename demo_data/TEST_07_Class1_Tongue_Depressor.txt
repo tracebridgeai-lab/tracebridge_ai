@@ -1,0 +1,9 @@
+DOCUMENT ID: TONGUE-007
+TITLE: Device Description & Risk Threshold
+DEVICE CLASS: Class I (Exempt)
+DATE: 2026-04-20
+
+SECTION: Clinical Exemptions
+The TraceBridge Wooden Tongue Depressor is a simple, non-measuring, non-sterile manual medical instrument. 
+As defined by Class I general control protocols, the device presents minimal potential for harm. Efficacy is visually self-evident. 
+Therefore, formal pre-market human clinical trials (IDE) and longitudinal survival statistical studies are omitted. Conformity is asserted strictly through basic dimensional tolerance quality control.

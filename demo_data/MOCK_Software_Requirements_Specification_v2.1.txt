@@ -1,0 +1,44 @@
+======================================================================
+DOCUMENT: Software Requirements Specification (SRS)
+PROJECT:  TraceBridge Alpha-Gluc CGM Monitor (Model 400X)
+VERSION:  2.1 (DRAFT)
+DATE:     10-APR-2024
+======================================================================
+
+1.0 APPROVALS
+----------------------------------------------------------------------
+Author:      Dr. J. Abueg, Lead Systems Engineer    [SIGNED: 11-APR-24]
+Reviewer:    C. Cao, Quality Assurance Manager      [SIGNED: 11-APR-24]
+Approver:    M. Tahliani, VP of Regulatory          [PENDING]
+
+2.0 PURPOSE
+----------------------------------------------------------------------
+This document specifies the software requirements for the Alpha-Gluc CGM 
+system, in accordance with IEC 62304:2006 (Software Life Cycle Processes).
+
+3.0 FUNCTIONAL REQUIREMENTS
+----------------------------------------------------------------------
+[SRS-FUN-001] The software shall initialize the boot sequence within 4.0 
+              seconds of the hardware power-on trigger.
+[SRS-FUN-002] The system shall poll the interstitial fluid sensor every 
+              5 minutes (300 seconds +/- 2s).
+[SRS-FUN-003] If the sensor fails to return a valid glucose reading for 
+              two consecutive polling cycles, the software shall trigger 
+              Audio Alarm State 2.
+
+4.0 PERFORMANCE AND SAFTEY REQUIREMENTS
+----------------------------------------------------------------------
+[SRS-SAF-001] Upon detection of a Critical Software Fault (e.g., memory 
+              overflow), the watchdog timer shall reset the controller 
+              in < 500 ms.
+[SRS-SAF-002] To comply with Cybersecurity controls, all Bluetooth Low 
+              Energy (BLE) telemetry must be encrypted using AES-256-GCM. 
+              Unauthenticated pairing requests must be rejected.
+[SRS-SAF-003] The software architecture shall decouple the graphical UI 
+              thread from the core dosing logic thread to prevent UI 
+              crashes from halting critical medical functions.
+
+5.0 TRACEABILITY
+----------------------------------------------------------------------
+This document traces directly to the System Architecture Document (SAD_v1.1) 
+and the overarching Product Requirements Document (PRD_v4.0).

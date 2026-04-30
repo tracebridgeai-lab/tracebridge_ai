@@ -1,0 +1,8 @@
+DOCUMENT ID: SAD-003
+TITLE: Comprehensive Software Architecture Design
+STANDARD: IEC 62304
+DATE: 2026-04-20
+
+SECTION 5.3: Software Architecture Document
+TraceBridge's Software Architecture strictly segregates the Class C control loops from the Class A non-critical UI layers through an implementation of an API Gateway acting as an isolation boundary. 
+The system defines clear data flow sequence diagrams between Software Items (SI) and Software Units (SU). Hardware segregation bounds are enforced at the network protocol layer (TCP/IP) preventing cross-memory contamination. All architectural units mapping back to system requirements are present in the traceability matrix Appendix C.

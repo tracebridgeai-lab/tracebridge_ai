@@ -11,6 +11,14 @@ export interface Upload {
   id?: string;
   userId: string;
   deviceName: string;
+  productCode?: string;
+  deviceClass?: string;
+  regulationNumber?: string;
+  features?: {
+      requiresSoftware: boolean;
+      requiresClinical: boolean;
+      requiresBiocompatibility: boolean;
+  };
   standards: string[];
   status: "pending" | "analyzing" | "complete" | "failed";
   createdAt: Timestamp | Date;
@@ -49,6 +57,8 @@ export interface GapResult {
     section: string;
     quote: string;
   }>;
+  reasoning?: string;
+  missingEvidence?: string;
   geminiResponse?: string;
   estimatedCost?: string;
   estimatedTimeline?: string;
