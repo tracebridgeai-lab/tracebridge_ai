@@ -1,29 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Optional site-wide Basic Auth gate for the deployed site.
- *
- * Set SITE_BASIC_AUTH_USER and SITE_BASIC_AUTH_PASS in Vercel to turn it on.
- * When they are unset (local dev, student machines), the gate is off.
- *
- * API routes are excluded: they authenticate with Firebase Bearer tokens, and a
- * Basic Auth check here would reject or crash on those Authorization headers.
- */
+// Site-wide basic auth gate.
+// Credentials come from environment variables (set them in Vercel → Project → Settings → Environment Variables):
+//   SITE_AUTH_USER
+//   SITE_AUTH_PASSWORD
+// If either is missing, the site stays locked rather than open.
 export function middleware(req: NextRequest) {
-  const expectedUser = process.env.SITE_BASIC_AUTH_USER;
-  const expectedPass = process.env.SITE_BASIC_AUTH_PASS;
-  if (!expectedUser || !expectedPass) return NextResponse.next();
+  const expectedUser = process.env.SITE_AUTH_USER;
+  const expectedPassword = process.env.SITE_AUTH_PASSWORD;
+  const basicAuth = req.headers.get('authorization');
 
-  const header = req.headers.get('authorization') ?? '';
-  if (header.startsWith('Basic ')) {
-    try {
-      const decoded = atob(header.slice('Basic '.length));
-      const sep = decoded.indexOf(':');
-      if (sep > -1 && decoded.slice(0, sep) === expectedUser && decoded.slice(sep + 1) === expectedPass) {
-        return NextResponse.next();
-      }
-    } catch {
-      // Malformed header: fall through to the challenge.
+  if (expectedUser && expectedPassword && basicAuth) {
+    const authValue = basicAuth.split(' ')[1] ?? '';
+    const [user, pwd] = atob(authValue).split(':');
+
+    if (user === expectedUser && pwd === expectedPassword) {
+      return NextResponse.next();
     }
   }
 

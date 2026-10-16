@@ -336,16 +336,16 @@ export default function PipelinePage() {
                             <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center border border-indigo-200">
                                 <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                             </span>
-                            Q-Sub Drift Remediation Pipeline
+                            Gap Remediation Pipeline
                             <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full uppercase tracking-widest border border-indigo-200">
                                 Kanban View
                             </span>
                         </h1>
                         <p className="text-lg font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 tracking-tight">
-                            Kanban anti-drift machine • Live Jira Integration Active
+                            Gap remediation workflow • Live Jira Integration Active
                         </p>
                         <p className="text-slate-500 mt-2 text-sm max-w-3xl leading-relaxed">
-                            Drag and drop Q-Sub drift gaps between columns to update their status. Changes are automatically synchronized with your engineering issue tracker.
+                            Drag and drop 510(k) gaps between columns to update their status. Changes are automatically synchronized with your engineering issue tracker.
                         </p>
                     </div>
                     {isMounted && uploads.length > 0 && (

@@ -1,70 +1,66 @@
 # TraceBridge AI
 
-Pre-submission audit for FDA 510(k) packages. TraceBridge checks that a submission's evidence hangs together across documents (intended use, risk controls, requirements, verification) and flags gaps against FDA guidance and the RTA checklist, with source citations.
+TraceBridge checks whether a medical device submission package agrees with itself before FDA reads it.
 
-Status: private beta. Live at [tracebridge.ai](https://tracebridge.ai).
+> **BU Spark DS 549 team:** start with the [Branching & Collaboration Guide](BU_SPARK_WORKFLOW.md). All student work goes into the `bu-spark` branch through pull requests. Never push to `main`.
 
-> **BU Spark contributors:** read the [BU Spark collaboration guide](BU_SPARK_WORKFLOW.md) before starting. All student pull requests target the `bu-spark` branch, never `main`.
+## Built today vs. building this semester
 
-## Stack
+| | What it is | Where it lives |
+| --- | --- | --- |
+| **Built today** | A working prototype that checks Q-Sub (Pre-Submission) agreements against the evidence documents in a package and shows the matches and gaps in a traceability matrix. It runs on synthetic test packages. Accuracy has not been measured yet. | `main` (deployed to tracebridge.ai) |
+| **Building this semester** | A 510(k) pipeline that detects defects across documents (missing data, incomplete traceability, outdated references, undocumented controls), cites both sides of every finding, and is scored with precision and recall against planted errors. | `bu-spark` and your `spark/<feature>` branches |
+| **Founder's redesign** | A pre-eSTAR readiness check (Upload, Findings by eSTAR section, Review and export). Owned by James. | `redesign/pre-estar` (please don't commit here) |
 
-- Next.js 16 (App Router), React 19, Tailwind CSS 4, TypeScript
-- Firebase: Auth, Firestore, Storage (client SDK plus Admin SDK on the server)
-- Google Gemini for analysis (`src/lib/gemini.ts`, `src/lib/gemini-rest.ts`)
+## Tech stack
+
+- Next.js and TypeScript, deployed on Vercel
+- Firebase for sign-in, database (Firestore) and file storage
+- Google Gemini API for analysis (`GEMINI_MOCK_MODE=true` runs without calling the API)
 - Playwright for end-to-end tests
-- Hosted on Vercel
 
-## Getting started
-
-Requires Node.js 20 or later.
+## Run it locally
 
 ```bash
 git clone https://github.com/tracebridgeai-lab/tracebridge_ai.git
 cd tracebridge_ai
-npm ci
-cp .env.example .env.local   # then fill in the values you were given
-npm run dev                  # http://localhost:3000
+git checkout bu-spark
+npm install
+cp .env.example .env.local   # then fill in the values James shares with you
+npm run dev
 ```
 
-No Gemini key yet? Set `GEMINI_MOCK_MODE="true"` in `.env.local` to run the app with mock analysis results.
+Open http://localhost:3000.
 
-Before opening a pull request, `npm run build` must pass and the files you changed must lint clean (`npx eslint <files>`).
+Never commit `.env.local` or any key, token or password. If you need a credential, ask James.
 
-## Environment variables
+## Where things are
 
-All variables are listed in [`.env.example`](.env.example). Put real values only in `.env.local`, which is git-ignored.
-
-| Variable | Used for |
+| Folder | What's in it |
 | --- | --- |
-| `FIREBASE_*` | Admin SDK on the server (Firestore, Storage, token checks) |
-| `NEXT_PUBLIC_FIREBASE_*` | Client SDK in the browser |
-| `GEMINI_API_KEY`, `GEMINI_MOCK_MODE` | Analysis engine, or mock mode for local work |
-| `ADMIN_EMAILS` | Emails allowed to call operator-only routes (global rule seeding, live evals) |
-| `BETA_ACCOUNT_PASSWORD` | Only for `scripts/create-beta-accounts.ts` |
-
-Never commit keys, tokens, passwords, or `.env` files. If you think a secret was committed, tell James right away rather than deleting it quietly.
-
-## Repository layout
-
-| Path | What it holds |
-| --- | --- |
-| `src/app/` | Pages (landing, login, dashboard) and API routes under `src/app/api/` |
-| `src/lib/` | Gap engine, Gemini clients, Firebase setup, eSTAR formatting, auth helpers |
-| `src/pipeline/` | FDA 510(k) scraper and ingestion to RAG-ready JSONL ([pipeline README](src/pipeline/README.md)) |
-| `scripts/` | Seeding, evaluation, and synthetic data generation scripts (run with `npx tsx`) |
-| `scripts/synthetic_dataset/` | Synthetic compliant and deficient packages by FDA product code |
-| `demo_data/` | Mock submission documents for demos and stress tests |
-| `FDA_Test_Dossiers/` | Small test dossiers with known pass and fail outcomes |
-| `phase_2_files/` | FDA guidance and regulatory rule templates |
+| `src/app/dashboard/` | The app's pages: upload, results, reports, traceability |
+| `src/app/api/` | Server routes: upload, analyze, gap, drift, traceability, precedents and others |
+| `src/pipeline/` | Analysis pipeline code |
+| `src/lib/` | Shared helpers, Firebase setup, FDA product code list |
+| `demo_data/` | Synthetic test documents used by scripts and tests |
+| `public/demo_data/` | Synthetic documents the app loads directly |
+| `FDA_Test_Dossiers/` | Three small synthetic dossiers (compliant, software failure, predicate failure) |
+| `scripts/` | Seeding, evaluation and data-generation scripts; `scripts/synthetic_dataset/` holds generated .docx packages |
+| `phase_2_files/` | FDA guidance and regulatory templates used for rules |
 | `tests/e2e/` | Playwright tests |
 
-All documents in `demo_data/`, `FDA_Test_Dossiers/`, and `scripts/synthetic_dataset/` are synthetic. Do not add real company submission files to this repository.
+All test data in this repo is synthetic. Real company submission data is never committed here.
 
-## Useful scripts
+## Useful commands
 
-```bash
-npm run seed:firestore     # seed Firestore with base data
-npm run parse:templates    # parse regulatory rule templates
-npm run eval:hostile       # run the evaluation engine against test documents
-npx playwright test        # end-to-end tests (starts the dev server)
-```
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the local dev server |
+| `npm run build` | Production build (run this before opening a PR) |
+| `npm run lint` | Lint the code |
+| `npm run eval:hostile` | Run the evaluation engine over `demo_data/` |
+| `npx playwright test` | Run the end-to-end tests |
+
+## Confidentiality
+
+Public FDA data is open. TraceBridge's dataset, curation and compiled data are confidential, and this repository is private. Don't copy code or data out of it.

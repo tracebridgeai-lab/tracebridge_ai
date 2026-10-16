@@ -20,9 +20,7 @@ import {
     Server,
     Menu,
     X,
-    ClipboardList,
     Network,
-    Calculator,
 } from "lucide-react";
 
 type NavItem = {
@@ -37,18 +35,16 @@ const navItems: NavItem[] = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     
     { isDivider: true, heading: "Core Workflow" },
-    { href: "/dashboard/upload", label: "Drift Detection", icon: Upload },
-    { href: "/dashboard/results", label: "Q-Sub Intelligence", icon: FileSearch },
-    { href: "/dashboard/pipeline", label: "Drift Remediation", icon: Kanban },
+    { href: "/dashboard/upload", label: "510(k) Gap Analysis", icon: Upload },
+    { href: "/dashboard/results", label: "Gap Findings", icon: FileSearch },
+    { href: "/dashboard/pipeline", label: "Remediation Pipeline", icon: Kanban },
     
     { isDivider: true, heading: "Outputs & Tracking" },
     { href: "/dashboard/traceability", label: "Traceability Matrix", icon: Network },
     { href: "/dashboard/reports", label: "Submission Hub", icon: FileText },
-    { href: "/dashboard/roi", label: "Financial Predictor", icon: Calculator },
     
     { isDivider: true, heading: "Settings & Management" },
     { href: "/dashboard/team", label: "Workspace & Team", icon: Users },
-    { href: "/dashboard/survey", label: "Validation Survey", icon: ClipboardList },
 ];
 
 export default function DashboardLayout({

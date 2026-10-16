@@ -2,7 +2,7 @@
   {
     "code": "DEMO-OMNIPOD",
     "deviceClass": "Class III",
-    "description": "Demo: Omnipod 5 / Horizon POD (Automated Insulin Delivery)",
+    "description": "Demo: Automated Insulin Delivery System",
     "regulationNumber": "21 CFR 880.5725",
     "requiresSoftware": true,
     "requiresClinical": false,
@@ -173,7 +173,7 @@
   {
     "code": "OMN",
     "deviceClass": "Class III",
-    "description": "Automated Insulin Delivery System (Omnipod)",
+    "description": "Automated Insulin Delivery System",
     "regulationNumber": "21 CFR 880.5725",
     "requiresSoftware": true,
     "requiresClinical": true,

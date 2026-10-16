@@ -21,10 +21,10 @@ export async function GET(req: Request) {
 
         const reports = [];
 
-        // Parse Enforcement (Warning Letters/Recalls)
+        // Parse Enforcement reports (openFDA enforcement data is recalls, not warning letters)
         for (const item of enforcmentData.results || []) {
             reports.push({
-                type: "WL",
+                type: "Recall",
                 title: `${item.recalling_firm} - ${item.reason_for_recall.substring(0, 50)}...`,
                 date: item.report_date,
                 description: item.reason_for_recall
@@ -50,28 +50,11 @@ export async function GET(req: Request) {
 }
 
 function generateFallbackPrecedents(code: string) {
-    // If the government API is down, use our reliable fallback for the pitch
+    // openFDA is unavailable or returned nothing. Return no precedents rather than
+    // placeholder entries, so the app never shows enforcement actions that didn't happen.
     return NextResponse.json({
         success: true,
-        data: [
-            {
-                type: "483",
-                title: "Insulet cited for deficient CAPA closeout",
-                date: "April 12, 2026",
-                description: `Matches 2 of your open gaps (Code: ${code})`
-            },
-            {
-                type: "WL",
-                title: "Dexcom - inadequate internal audit cadence",
-                date: "April 8, 2026",
-                description: "ISO 13485 § 8.2.2 - Relevant to you"
-            },
-            {
-                type: "510k",
-                title: "Tandem Diabetes clearance granted",
-                date: "April 3, 2026",
-                description: "Predicate device for your submission"
-            }
-        ]
+        data: [],
+        message: `Live FDA precedents are unavailable right now for product code ${code}.`
     });
 }

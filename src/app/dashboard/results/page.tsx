@@ -1162,7 +1162,7 @@ function ResultsContent() {
                             <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center border border-indigo-200">
                                 <Brain className="w-4 h-4 text-indigo-600" />
                             </span>
-                            Q-Sub Drift Intelligence
+                            510(k) Gap Findings
                             {report?.upload?.status === 'complete' ? (
                                 <span className="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-widest flex items-center gap-1 border border-emerald-200">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>

@@ -255,7 +255,7 @@ export default function TraceabilityMatrixPage() {
                         </span>
                     </h1>
                     <p className="text-lg font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 tracking-tight">
-                        Real-time AI monitoring of your engineering pipeline against FDA regulatory feedback to prevent Q-Sub drift.
+                        Real-time AI monitoring of your engineering pipeline against FDA regulatory feedback to keep your 510(k) evidence package coherent.
                     </p>
                     <p className="text-slate-500 mt-2 text-sm max-w-3xl leading-relaxed">
                         Visualize the real-time compliance status of your product's subsystems against established regulatory standards. Use the filters to quickly identify unverified gaps or failing components before final submission.
